@@ -39,6 +39,9 @@ public class Chat {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "muted_until")
+    private LocalDateTime mutedUntil;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

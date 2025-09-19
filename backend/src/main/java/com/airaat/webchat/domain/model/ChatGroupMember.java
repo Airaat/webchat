@@ -34,8 +34,8 @@ public class ChatGroupMember {
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt;
 
-    @Column(name = "muted_until")
-    private LocalDateTime mutedUntil;
+    @Column(name = "banned_until")
+    private LocalDateTime bannedUntil;
 
     @PrePersist
     protected void onCreate() {
