@@ -5,6 +5,8 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,13 +26,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    @ExceptionHandler(ValidationError.class)
-    public ResponseEntity<?> handleValidationError(ValidationError ex) {
+    @ExceptionHandler({ValidationError.class, BadCredentialsException.class})
+    public ResponseEntity<?> handleValidationError(RuntimeException ex) {
         return generateResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
+    @ExceptionHandler({EntityNotFoundException.class, UsernameNotFoundException.class})
+    public ResponseEntity<?> handleEntityNotFoundException(RuntimeException ex) {
         return generateResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
