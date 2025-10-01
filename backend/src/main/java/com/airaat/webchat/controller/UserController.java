@@ -30,14 +30,16 @@ public class UserController {
         return ResponseEntity.ok(users.map(UserResponse::from).toList());
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserUpdate dto) {
-        return ResponseEntity.ok(UserResponse.from(userService.update(id, dto)));
+    @PatchMapping
+    public ResponseEntity<UserResponse> update(@Valid @RequestBody UserUpdate dto) {
+        User currentUser = userService.current();
+        return ResponseEntity.ok(UserResponse.from(userService.update(currentUser, dto)));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable Long id) {
-        userService.delete(id);
+    @DeleteMapping
+    public ResponseEntity<?> deleteById() {
+        User currentUser = userService.current();
+        userService.delete(currentUser);
         return ResponseEntity.noContent().build();
     }
 }

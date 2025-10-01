@@ -10,6 +10,8 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,6 +27,11 @@ import java.util.Objects;
 public class UserService implements UserDetailsService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+
+    public User current() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        return (User) context.getAuthentication().getPrincipal();
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -65,8 +72,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User update(Long id, UserUpdate dto) {
-        User user = getById(id);
+    public User update(User user, UserUpdate dto) {
         String username = dto.getUsername();
 
         if (isUserExists(username) && !Objects.equals(user.getUsername(), username)) {
@@ -102,8 +108,8 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        repository.delete(getById(id));
+    public void delete(User user) {
+        repository.delete(user);
     }
 
     private boolean isUserExists(String username) {
