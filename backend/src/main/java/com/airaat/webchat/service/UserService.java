@@ -10,7 +10,6 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -29,17 +28,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities(new SimpleGrantedAuthority(user.getGlobalRole().name()))
-                .build();
-    }
-
-    public void updateLastLogin(String username) {
-        User user = repository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException(username));
-        user.setLastLoginAt(LocalDateTime.now());
+        return repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
     }
 
     public User getById(Long id) {
@@ -67,6 +56,11 @@ public class UserService implements UserDetailsService {
                 .build();
 
         return repository.save(user);
+    }
+
+    @Transactional
+    public void updateLastLogin(User user) {
+        user.setLastLoginAt(LocalDateTime.now());
     }
 
     @Transactional
