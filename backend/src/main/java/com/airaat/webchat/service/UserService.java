@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -50,7 +51,7 @@ public class UserService implements UserDetailsService {
             throw new EntityExistsException("Username already taken");
         }
 
-        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+        if (!Objects.equals(dto.getPassword(), dto.getConfirmPassword())) {
             throw new ValidationError("Passwords do not match");
         }
 
@@ -67,11 +68,11 @@ public class UserService implements UserDetailsService {
         User user = getById(id);
         String username = dto.getUsername();
 
-        if (!user.getUsername().equals(username) && isUserExists(username)) {
+        if (isUserExists(username) && !Objects.equals(user.getUsername(), username)) {
             throw new EntityExistsException("Username already taken");
         }
 
-        if (dto.hasPassword() && !dto.getPassword().equals(dto.getConfirmPassword())) {
+        if (dto.hasPassword() && !Objects.equals(dto.getPassword(), dto.getConfirmPassword())) {
             throw new ValidationError("Passwords do not match");
         }
 
