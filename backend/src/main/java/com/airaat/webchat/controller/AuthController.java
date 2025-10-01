@@ -12,7 +12,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
@@ -24,8 +27,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest dto) {
-        UserDetails user = authService.verify(dto);
-        String jwt = jwtService.generateToken(user.getUsername());
+        UserDetails userDetails = authService.verify(dto);
+        String jwt = jwtService.generateToken(userDetails.getUsername());
+        userService.updateLastLogin(userDetails.getUsername());
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
@@ -33,6 +37,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest dto) {
         User user = userService.create(dto);
         String jwt = jwtService.generateToken(user.getUsername());
+        userService.updateLastLogin(user.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(jwt));
     }
 }

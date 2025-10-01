@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,6 +35,11 @@ public class UserService implements UserDetailsService {
                 .password(user.getPassword())
                 .authorities(new SimpleGrantedAuthority(user.getGlobalRole().name()))
                 .build();
+    }
+
+    public void updateLastLogin(String username) {
+        User user = repository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException(username));
+        user.setLastLoginAt(LocalDateTime.now());
     }
 
     public User getById(Long id) {
