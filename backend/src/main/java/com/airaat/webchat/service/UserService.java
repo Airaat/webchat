@@ -1,6 +1,6 @@
 package com.airaat.webchat.service;
 
-import com.airaat.webchat.domain.dto.request.UserCreate;
+import com.airaat.webchat.domain.dto.request.SignupRequest;
 import com.airaat.webchat.domain.dto.request.UserUpdate;
 import com.airaat.webchat.domain.enums.GlobalRole;
 import com.airaat.webchat.domain.model.User;
@@ -10,14 +10,30 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = repository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities(new SimpleGrantedAuthority(user.getGlobalRole().name()))
+                .build();
+    }
 
     public User getById(Long id) {
         return repository.findById(id).orElseThrow(
@@ -29,7 +45,7 @@ public class UserService {
     }
 
     @Transactional
-    public User create(UserCreate dto) {
+    public User create(SignupRequest dto) {
         if (isUserExists(dto.getUsername())) {
             throw new EntityExistsException("Username already taken");
         }
@@ -40,7 +56,7 @@ public class UserService {
 
         User user = User.builder()
                 .username(dto.getUsername())
-                .password(dto.getPassword())
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
 
         return repository.save(user);
@@ -64,7 +80,7 @@ public class UserService {
         }
 
         if (dto.hasPassword()) {
-            user.setPassword(dto.getPassword());
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
         if (dto.hasIsActive()) {

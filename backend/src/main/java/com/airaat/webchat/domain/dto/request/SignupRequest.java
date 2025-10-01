@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserCreate {
+public class SignupRequest {
     @NotBlank(message = "Fill the username")
     @Size(min = 5, max = 50, message = "Username should be larger then 5 characters")
     private String username;
