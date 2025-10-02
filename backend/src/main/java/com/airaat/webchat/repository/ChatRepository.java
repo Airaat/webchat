@@ -85,7 +85,11 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                                  WHERE c.id = :chatId
                                    AND cp.user_id <> :userId)
             
-            SELECT c.*,
+            SELECT c.id,
+                   c.type,
+                   c.created_at,
+                   c.group_id,
+                   c.muted_until,
                    lm.content AS last_message,
                    lm.last_message_at,
                    ct.title
@@ -95,4 +99,19 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
             WHERE c.id = :chatId
             """, nativeQuery = true)
     Optional<ChatItem> findByIdForUser(@Param("chatId") Long chatId, @Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT c.*
+            FROM chat c
+            WHERE c.id = :chatId
+              AND (EXISTS(SELECT 1
+                         FROM chat_participant
+                         WHERE chat_id = :chatId AND user_id = :userId)
+                  OR EXISTS(SELECT 1
+                            FROM chat c
+                            JOIN chat_group cg ON c.group_id = cg.id
+                            JOIN chat_group_member cgm ON cg.id = cgm.chat_group_id
+                            WHERE c.id = :chatId AND cgm.user_id = :userId))
+            """, nativeQuery = true)
+    Optional<Chat> findByIdAndUserId(@Param("chatId") Long chatId, @Param("userId") Long userId);
 }

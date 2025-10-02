@@ -1,14 +1,22 @@
 package com.airaat.webchat.controller;
 
+import com.airaat.webchat.domain.dto.ChatGroupDTO;
+import com.airaat.webchat.domain.dto.request.CreateChatRequest;
+import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.ChatItem;
 import com.airaat.webchat.domain.dto.response.ChatListResponse;
+import com.airaat.webchat.domain.enums.ChatType;
 import com.airaat.webchat.domain.model.User;
 import com.airaat.webchat.service.ChatService;
 import com.airaat.webchat.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -33,17 +41,43 @@ class ChatController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create() {
-        return null;
+    public ResponseEntity<?> create(@RequestBody @Valid CreateChatRequest request) {
+        User current = userService.current();
+
+        if (request.getChatType() == ChatType.PRIVATE) {
+            User target = userService.getById(request.getUserIds().getFirst());
+            chatService.createPrivate(List.of(current, target));
+        } else {
+            ChatGroupDTO dto = ChatGroupDTO.builder()
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .creator(current)
+                    .members(userService.getByIds(request.getUserIds()))
+                    .build();
+
+            chatService.createGroup(dto);
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/mute")
-    public ResponseEntity<?> mute() {
-        return null;
+    public ResponseEntity<?> mute(@RequestBody @Valid MuteChatRequest request) {
+        chatService.mute(request, userService.current());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> delete() {
-        return null;
+    @DeleteMapping("/leave/{id}")
+    public ResponseEntity<?> leave(@PathVariable Long id) {
+        User current = userService.current();
+        chatService.leave(id, current);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        User current = userService.current();
+        chatService.delete(id, current);
+        return ResponseEntity.noContent().build();
     }
 }

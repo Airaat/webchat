@@ -1,5 +1,6 @@
 package com.airaat.webchat.controller;
 
+import com.airaat.webchat.exception.NoAccessException;
 import com.airaat.webchat.exception.ValidationError;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,7 +27,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    @ExceptionHandler({ValidationError.class, BadCredentialsException.class})
+    @ExceptionHandler({ValidationError.class, BadCredentialsException.class, NoAccessException.class})
     public ResponseEntity<?> handleValidationError(RuntimeException ex) {
         return generateResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
