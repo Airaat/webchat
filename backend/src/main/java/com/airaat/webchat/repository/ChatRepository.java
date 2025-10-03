@@ -17,7 +17,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
             WITH user_chats AS (SELECT c.id, c.type, c.created_at, c.group_id, c.muted_until
                                 FROM chat c
                                          JOIN chat_group cg ON c.group_id = cg.id
-                                         JOIN chat_group_member cgm ON cg.id = cgm.chat_group_id
+                                         JOIN chat_group_member cgm ON cg.id = cgm.group_id
                                 WHERE cgm.user_id = :userId
                                 /* group chats */
                                 UNION
@@ -54,7 +54,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                     WITH all_chats AS (SELECT c.*
                                        FROM chat c
                                          JOIN chat_group cg ON c.group_id = cg.id
-                                         JOIN chat_group_member cgm ON cg.id = cgm.chat_group_id
+                                         JOIN chat_group_member cgm ON cg.id = cgm.group_id
                                        WHERE cgm.user_id = :userId
                                        UNION
                                        SELECT c.*
@@ -110,7 +110,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                   OR EXISTS(SELECT 1
                             FROM chat c
                             JOIN chat_group cg ON c.group_id = cg.id
-                            JOIN chat_group_member cgm ON cg.id = cgm.chat_group_id
+                            JOIN chat_group_member cgm ON cg.id = cgm.group_id
                             WHERE c.id = :chatId AND cgm.user_id = :userId))
             """, nativeQuery = true)
     Optional<Chat> findByIdAndUserId(@Param("chatId") Long chatId, @Param("userId") Long userId);

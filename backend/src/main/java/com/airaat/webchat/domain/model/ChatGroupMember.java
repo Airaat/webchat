@@ -19,7 +19,7 @@ public class ChatGroupMember {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "chat_group_id", nullable = false)
+    @JoinColumn(name = "group_id", nullable = false)
     private ChatGroup group;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
