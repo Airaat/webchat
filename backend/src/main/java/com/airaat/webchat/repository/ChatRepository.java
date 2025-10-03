@@ -1,7 +1,7 @@
 package com.airaat.webchat.repository;
 
+import com.airaat.webchat.domain.projection.ChatView;
 import com.airaat.webchat.domain.model.Chat;
-import com.airaat.webchat.domain.dto.response.ChatItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface ChatRepository extends CrudRepository<Chat, Long> {
     @Query(value = """
-            WITH user_chats AS (SELECT c.id, c.type, c.created_at, c.group_id, cgm.muted_until
+            WITH user_chats AS (SELECT c.id, c.type, c.created_at, c.group_id, cgm.role, cgm.muted_until
                                 FROM chat c
                                          JOIN chat_group cg ON c.group_id = cg.id
                                          JOIN chat_group_member cgm ON cg.id = cgm.group_id
@@ -22,7 +22,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                                 /* group chats */
                                 UNION
                                 /* personal chats */
-                                SELECT c.id, c.type, c.created_at, c.group_id, cp.muted_until
+                                SELECT c.id, c.type, c.created_at, c.group_id, null, cp.muted_until
                                 FROM chat c
                                          JOIN chat_participant cp ON c.id = cp.chat_id
                                 WHERE cp.user_id = :userId),
@@ -64,7 +64,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
             
                     SELECT COUNT(*) FROM all_chats
             """, nativeQuery = true)
-    Page<ChatItem> findAllForUser(@Param("userId") Long userId, Pageable pageable);
+    Page<ChatView> findAllForUser(@Param("userId") Long userId, Pageable pageable);
 
     @Query(value = """
             WITH last_messages AS (SELECT m.chat_id,
@@ -73,13 +73,13 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                                           ROW_NUMBER() OVER (PARTITION BY m.chat_id ORDER BY m.created_at DESC) AS rn
                                    FROM message m
                                    WHERE chat_id = :chatId),
-                 chat_titles AS (SELECT c.id, cg.name AS title, cgm.muted_until
+                 chat_titles AS (SELECT c.id, cg.name AS title, cgm.muted_until, cgm.role
                                  FROM chat c
                                  JOIN chat_group cg ON c.group_id = cg.id
                                  JOIN chat_group_member cgm ON cgm.group_id = cg.id
                                  WHERE c.id = :chatId AND cgm.user_id = :userId
                                  UNION ALL
-                                 SELECT c.id, u.username AS title, cp.muted_until
+                                 SELECT c.id, u.username AS title, cp.muted_until, null
                                  FROM chat c
                                  JOIN chat_participant cp ON c.id = cp.chat_id
                                  JOIN usr u ON cp.user_id = u.id
@@ -90,6 +90,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                    c.type,
                    c.created_at,
                    c.group_id,
+                   ct.role,
                    ct.muted_until,
                    lm.content AS last_message,
                    lm.last_message_at,
@@ -99,7 +100,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
             LEFT JOIN last_messages lm ON c.id = lm.chat_id AND lm.rn = 1
             WHERE c.id = :chatId
             """, nativeQuery = true)
-    Optional<ChatItem> findByIdForUser(@Param("chatId") Long chatId, @Param("userId") Long userId);
+    Optional<ChatView> findByIdForUser(@Param("chatId") Long chatId, @Param("userId") Long userId);
 
     @Query(value = """
             SELECT c.*

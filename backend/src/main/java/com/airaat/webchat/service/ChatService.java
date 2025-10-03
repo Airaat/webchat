@@ -1,6 +1,7 @@
 package com.airaat.webchat.service;
 
 import com.airaat.webchat.domain.dto.ChatGroupDTO;
+import com.airaat.webchat.domain.projection.ChatView;
 import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.ChatItem;
 import com.airaat.webchat.domain.enums.ChatType;
@@ -32,14 +33,17 @@ public class ChatService {
     private final ChatGroupMemberRepository groupMemberRepository;
 
     public ChatItem getByIdForUser(Long id, User user) {
-        return repository.findByIdForUser(id, user.getId()).orElseThrow(
+        ChatView view = repository.findByIdForUser(id, user.getId()).orElseThrow(
                 () -> new EntityNotFoundException("Chat with id " + id + " not found"));
+
+        return ChatItem.from(view);
     }
 
     public Page<ChatItem> getAllForUser(User user, int num) {
         final int size = 50;
         Pageable page = PageRequest.of(num, size, Sort.Direction.DESC, "last_message_at", "created_at");
-        return repository.findAllForUser(user.getId(), page);
+        Page<ChatView> result = repository.findAllForUser(user.getId(), page);
+        return result.map(ChatItem::from);
     }
 
     @Transactional

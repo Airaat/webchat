@@ -1,42 +1,37 @@
 package com.airaat.webchat.domain.dto.response;
 
+import com.airaat.webchat.domain.projection.ChatView;
 import com.airaat.webchat.domain.enums.ChatType;
+import com.airaat.webchat.domain.enums.GroupRole;
+import lombok.Builder;
 import lombok.Data;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 public class ChatItem {
     private Long id;
-    private String type;
+    private ChatType type;
     private LocalDateTime createdAt;
     private Long groupId;
+    private GroupRole groupRole;
     private LocalDateTime mutedUntil;
     private String lastMessage;
     private LocalDateTime lastMessageAt;
     private String title;
 
-    // TODO: this casts indicates the need to separate dto from the projection
-    public ChatItem(Long id,
-                    String type,
-                    Timestamp createdAt,
-                    Long groupId,
-                    Timestamp mutedUntil,
-                    String lastMessage,
-                    Timestamp lastMessageAt,
-                    String title) {
-        this.id = id;
-        this.type = type;
-        this.createdAt = createdAt != null ? createdAt.toLocalDateTime() : null;
-        this.groupId = groupId;
-        this.mutedUntil = mutedUntil != null ? mutedUntil.toLocalDateTime() : null;
-        this.lastMessage = lastMessage;
-        this.lastMessageAt = lastMessageAt != null ? lastMessageAt.toLocalDateTime() : null;
-        this.title = title;
-    }
-
-    public ChatType getChatType() {
-        return ChatType.valueOf(type);
+    public static ChatItem from(ChatView view) {
+        return ChatItem.builder()
+                .id(view.getId())
+                .title(view.getTitle())
+                .groupId(view.getGroupId())
+                .lastMessage(view.getLastMessage())
+                .type(ChatType.valueOf(view.getType()))
+                .groupRole(view.getRole() != null ? GroupRole.valueOf(view.getRole()) : null)
+                .createdAt(view.getCreatedAt() != null ? view.getCreatedAt().toLocalDateTime() : null)
+                .mutedUntil(view.getMutedUntil() != null ? view.getMutedUntil().toLocalDateTime() : null)
+                .lastMessageAt(view.getLastMessageAt() != null ? view.getLastMessageAt().toLocalDateTime() : null)
+                .build();
     }
 }
