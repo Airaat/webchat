@@ -1,6 +1,8 @@
 package com.airaat.webchat.repository;
 
+import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.ChatParticipant;
+import com.airaat.webchat.domain.model.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +21,6 @@ public interface ChatParticipantRepository extends CrudRepository<ChatParticipan
                         WHERE cp.chat_id = c.id AND cp.user_id = :userId2)
             """, nativeQuery = true)
     boolean existsPrivateChatBetweenUsers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+
+    ChatParticipant getChatParticipantsByChatAndUser(Chat chat, User user);
 }

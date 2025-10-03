@@ -81,6 +81,7 @@ public class ChatService {
 
         ChatGroup group = new ChatGroup();
         group.setName(dto.getName());
+        group.setDescription(dto.getDescription());
         group.setCreatedBy(creator);
         groupRepository.save(group);
 
@@ -103,10 +104,20 @@ public class ChatService {
 
     @Transactional
     public void mute(MuteChatRequest dto, User user) {
-        // TODO: unmute?
         Chat chat = getOrNotFound(dto.getChatId(), user.getId());
-//        chat.setMutedUntil(dto.getUntilDate());
-        repository.save(chat);
+        boolean needToMute = dto.isMute();
+
+        if (chat.getType() == ChatType.GROUP) {
+            ChatGroup group = chat.getGroup();
+            ChatGroupMember member = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
+                    () -> new EntityNotFoundException("User is not member of group: " + group.getName()));
+            member.setMutedUntil(needToMute ? dto.getUntilDate() : null);
+            groupMemberRepository.save(member);
+        } else {
+            ChatParticipant member = participantRepository.getChatParticipantsByChatAndUser(chat, user);
+            member.setMutedUntil(needToMute ? dto.getUntilDate() : null);
+            participantRepository.save(member);
+        }
     }
 
     @Transactional

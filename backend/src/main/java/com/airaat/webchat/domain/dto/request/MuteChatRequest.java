@@ -15,7 +15,9 @@ public class MuteChatRequest {
     @NotNull(message = "Enter the chat id")
     private Long chatId;
 
-    @NotNull(message = "Fill in the until date for mute")
+    @NotNull(message = "No action provide: mute or umnute")
+    private boolean mute;
+
     @Future(message = "Incorrect date")
     private LocalDateTime untilDate;
 }
