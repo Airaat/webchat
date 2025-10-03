@@ -2,7 +2,12 @@ package com.airaat.webchat.domain.model;
 
 import com.airaat.webchat.domain.enums.GroupRole;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -23,10 +28,12 @@ public class ChatGroupMember {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "group_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ChatGroup group;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Enumerated(EnumType.STRING)

@@ -2,6 +2,8 @@ package com.airaat.webchat.domain.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -28,8 +30,9 @@ public class Attachment {
 
     private String mimetype;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "uploaded_by", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uploaded_by")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User uploadedBy;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

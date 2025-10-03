@@ -1,7 +1,12 @@
 package com.airaat.webchat.domain.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,7 +33,8 @@ public class ChatGroup {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User createdBy;
 
     @OneToMany(

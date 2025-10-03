@@ -26,7 +26,7 @@ public class Chat {
     @Column(length = 20, nullable = false)
     private ChatType type;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "group_id")
     private ChatGroup group;
 
@@ -37,6 +37,13 @@ public class Chat {
     )
     @Builder.Default
     private List<Message> messages = new ArrayList<>();
+
+    @OneToMany(
+        mappedBy = "chat",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private List<ChatParticipant> participants = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

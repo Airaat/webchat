@@ -3,6 +3,8 @@ package com.airaat.webchat.domain.model;
 import com.airaat.webchat.domain.enums.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,8 +30,9 @@ public class Message {
     @JoinColumn(name = "chat_id", nullable = false)
     private Chat chat;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User author;
 
     @Column(length = 2048)
