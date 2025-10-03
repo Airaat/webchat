@@ -3,13 +3,18 @@ package com.airaat.webchat.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Getter
-@Setter
+import java.time.LocalDateTime;
+
+@Data
+@Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Entity
-@Table(name = "chat_participant")
+@Table(name = "chat_participant", indexes = {
+        @Index(name = "idx_chat_participant_chat_id", columnList = "chat_id"),
+        @Index(name = "idx_chat_participant_user_id", columnList = "user_id"),
+        @Index(name = "idx_chat_participant_unique", columnList = "user_id, chat_id", unique = true),
+})
 public class ChatParticipant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,4 +27,7 @@ public class ChatParticipant {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "muted_until")
+    private LocalDateTime mutedUntil;
 }

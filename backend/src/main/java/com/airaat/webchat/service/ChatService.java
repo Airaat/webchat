@@ -105,7 +105,7 @@ public class ChatService {
     public void mute(MuteChatRequest dto, User user) {
         // TODO: unmute?
         Chat chat = getOrNotFound(dto.getChatId(), user.getId());
-        chat.setMutedUntil(dto.getUntilDate());
+//        chat.setMutedUntil(dto.getUntilDate());
         repository.save(chat);
     }
 

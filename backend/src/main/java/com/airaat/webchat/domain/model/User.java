@@ -11,13 +11,14 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Entity
-@Table(name = "usr")
+@Table(name = "usr", indexes = {
+        @Index(name = "idx_usr_username", columnList = "username")
+})
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

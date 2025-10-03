@@ -14,7 +14,11 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "message")
+@Table(name = "message", indexes = {
+        @Index(name = "idx_message_chat_id", columnList = "chat_id"),
+        @Index(name = "idx_message_created_at", columnList = "created_at"),
+        @Index(name = "idx_message_replied_to", columnList = "replied_to")
+})
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +39,7 @@ public class Message {
     @Column(nullable = false)
     private MessageType type;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "replied_to")
     private Message repliedTo;
 

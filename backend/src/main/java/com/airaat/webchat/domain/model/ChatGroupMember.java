@@ -6,13 +6,16 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
+@Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Entity
-@Table(name = "chat_group_member")
+@Table(name = "chat_group_member", indexes = {
+        @Index(name = "idx_chat_group_member_user_id", columnList = "user_id"),
+        @Index(name = "idx_chat_group_member_group_id", columnList = "group_id"),
+        @Index(name = "idx_chat_group_member_unique", columnList = "user_id,group_id", unique = true),
+})
 public class ChatGroupMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +36,9 @@ public class ChatGroupMember {
 
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt;
+
+    @Column(name = "muted_until")
+    private LocalDateTime mutedUntil;
 
     @Column(name = "banned_until")
     private LocalDateTime bannedUntil;

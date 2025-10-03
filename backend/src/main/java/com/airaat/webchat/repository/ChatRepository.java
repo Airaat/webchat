@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface ChatRepository extends CrudRepository<Chat, Long> {
     @Query(value = """
-            WITH user_chats AS (SELECT c.id, c.type, c.created_at, c.group_id, c.muted_until
+            WITH user_chats AS (SELECT c.id, c.type, c.created_at, c.group_id, cgm.muted_until
                                 FROM chat c
                                          JOIN chat_group cg ON c.group_id = cg.id
                                          JOIN chat_group_member cgm ON cg.id = cgm.group_id
@@ -22,7 +22,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                                 /* group chats */
                                 UNION
                                 /* personal chats */
-                                SELECT c.id, c.type, c.created_at, c.group_id, c.muted_until
+                                SELECT c.id, c.type, c.created_at, c.group_id, cp.muted_until
                                 FROM chat c
                                          JOIN chat_participant cp ON c.id = cp.chat_id
                                 WHERE cp.user_id = :userId),
@@ -73,12 +73,13 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                                           ROW_NUMBER() OVER (PARTITION BY m.chat_id ORDER BY m.created_at DESC) AS rn
                                    FROM message m
                                    WHERE chat_id = :chatId),
-                 chat_titles AS (SELECT c.id, cg.name AS title
+                 chat_titles AS (SELECT c.id, cg.name AS title, cgm.muted_until
                                  FROM chat c
                                  JOIN chat_group cg ON c.group_id = cg.id
-                                 WHERE c.id = :chatId
+                                 JOIN chat_group_member cgm ON cgm.group_id = cg.id
+                                 WHERE c.id = :chatId AND cgm.user_id = :userId
                                  UNION ALL
-                                 SELECT c.id, u.username AS title
+                                 SELECT c.id, u.username AS title, cp.muted_until
                                  FROM chat c
                                  JOIN chat_participant cp ON c.id = cp.chat_id
                                  JOIN usr u ON cp.user_id = u.id
@@ -89,7 +90,7 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                    c.type,
                    c.created_at,
                    c.group_id,
-                   c.muted_until,
+                   ct.muted_until,
                    lm.content AS last_message,
                    lm.last_message_at,
                    ct.title

@@ -7,25 +7,22 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Entity
 @Table(name = "chat_group")
 public class ChatGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 100, nullable = false)
+    @Column(length = 50, nullable = false)
     private String name;
 
+    @Column(length = 100)
     private String description;
-
-    @Column(name = "is_private", nullable = false)
-    private boolean isPrivate = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -8,13 +8,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Entity
-@Table(name = "chat")
+@Table(name = "chat", indexes = {
+        @Index(name = "idx_chat_group_id", columnList = "group_id"),
+        @Index(name = "idx_chat_created_at", columnList = "created_at"),
+})
 public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,9 +40,6 @@ public class Chat {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "muted_until")
-    private LocalDateTime mutedUntil;
 
     @PrePersist
     protected void onCreate() {
