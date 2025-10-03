@@ -21,8 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -73,21 +72,21 @@ public class ChatService {
     @Transactional
     public void createGroup(ChatGroupDTO dto) {
         if (dto.getMembers().isEmpty()) {
-            // TODO: get only unique users after that check
             throw new ValidationError("User list is empty");
         }
 
         User creator = dto.getCreator();
+        Set<User> uniqueUsers = new HashSet<>(dto.getMembers());
+        uniqueUsers.add(creator);
 
-        ChatGroup group = new ChatGroup();
-        group.setName(dto.getName());
-        group.setDescription(dto.getDescription());
-        group.setCreatedBy(creator);
+        ChatGroup group = ChatGroup.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .createdBy(creator)
+                .build();
         groupRepository.save(group);
 
-        List<User> members = dto.getMembers();
-        members.add(creator);
-        members.forEach(user -> {
+        List.copyOf(uniqueUsers).forEach(user -> {
             ChatGroupMember member = new ChatGroupMember();
             member.setGroup(group);
             member.setUser(user);
@@ -99,7 +98,6 @@ public class ChatService {
         chat.setType(ChatType.GROUP);
         chat.setGroup(group);
         repository.save(chat);
-
     }
 
     @Transactional
