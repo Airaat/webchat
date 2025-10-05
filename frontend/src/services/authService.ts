@@ -1,4 +1,4 @@
-import type {LoginRequest, LoginResponse} from "../types/auth.ts";
+import type {LoginRequest, LoginResponse, SignupRequest} from "../types/auth.ts";
 import {API_BASE_URL} from "../const.ts";
 
 class AuthService {
@@ -12,6 +12,21 @@ class AuthService {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({message: 'Login failed'}));
             throw new Error(errorData.message || 'Login failed');
+        }
+
+        return response.json();
+    }
+
+    async signup(credentials: SignupRequest): Promise<LoginResponse> {
+        const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(credentials)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({message: 'Sign up failed'}));
+            throw new Error(errorData.message || 'Sign up failed');
         }
 
         return response.json();

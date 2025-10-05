@@ -7,6 +7,12 @@ export interface LoginResponse {
     token: string;
 }
 
+export interface SignupRequest {
+    username: string;
+    password: string;
+    confirmPassword: string;
+}
+
 export interface User {
     id: number;
     username: string;
