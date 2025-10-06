@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import {Card} from '../ui/Layout/Card';
 import {TextField} from '../ui/Form/TextField';
-import {useLogin} from '../../hooks/useAuth';
+import {useAuth} from '../../hooks/useAuth';
 import type {LoginRequest} from '../../types/auth';
 
 interface LoginFormProps {
@@ -24,7 +24,7 @@ interface FormErrors {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({onSuccess, onSignUpClick}) => {
-    const {login, isLoading, error: networkError} = useLogin();
+    const {login, isLoading, error: networkError} = useAuth();
     const [formData, setFormData] = useState<LoginRequest>({
         username: '',
         password: '',
