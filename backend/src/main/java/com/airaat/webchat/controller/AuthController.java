@@ -1,5 +1,6 @@
 package com.airaat.webchat.controller;
 
+import com.airaat.webchat.domain.dto.UserPayload;
 import com.airaat.webchat.domain.dto.request.LoginRequest;
 import com.airaat.webchat.domain.dto.request.SignupRequest;
 import com.airaat.webchat.domain.dto.response.AuthResponse;
@@ -27,7 +28,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest dto) {
         User user = authService.verify(dto);
-        String jwt = jwtService.generateToken(user.getUsername());
+        String jwt = jwtService.generateToken(UserPayload.of(user));
         userService.updateLastLogin(user);
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
@@ -35,7 +36,7 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest dto) {
         User user = userService.create(dto);
-        String jwt = jwtService.generateToken(user.getUsername());
+        String jwt = jwtService.generateToken(UserPayload.of(user));
         userService.updateLastLogin(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(jwt));
     }

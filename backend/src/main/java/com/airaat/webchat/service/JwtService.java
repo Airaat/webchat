@@ -1,6 +1,7 @@
 package com.airaat.webchat.service;
 
 import com.airaat.webchat.config.JwtProperties;
+import com.airaat.webchat.domain.dto.UserPayload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -18,18 +19,25 @@ import java.util.Date;
 public class JwtService {
     private final JwtProperties properties;
 
-    public String generateToken(String username) {
+    public String generateToken(UserPayload payload) {
         return Jwts.builder()
-                .subject(username)
+                .subject(payload.getUserId())
+                .claim("username", payload.getUsername())
+                .claim("role", payload.getRole())
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plus(properties.getExpirationMs(), ChronoUnit.MILLIS)))
                 .signWith(getKey())
                 .compact();
     }
 
+    public Long extractUserId(String token) {
+        Claims claims = parseToken(token);
+        return Long.parseLong(claims.getSubject());
+    }
+
     public String extractUsername(String token) {
         Claims claims = parseToken(token);
-        return claims.getSubject();
+        return claims.get("username", String.class);
     }
 
     public boolean isValidToken(String token) {
