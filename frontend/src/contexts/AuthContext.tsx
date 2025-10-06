@@ -1,9 +1,9 @@
-import React, {createContext, useState, useEffect, type ReactNode} from 'react';
-import type {LoginRequest} from '../types/auth';
+import React, {createContext, type ReactNode, useEffect, useState} from 'react';
+import type {LoginRequest, User} from '../types/auth';
 import {authService} from '../services/authService';
 
 interface AuthContextType {
-    username: string | null;
+    user: User | null;
     isLoading: boolean;
     login: (credentials: LoginRequest) => Promise<void>;
     logout: () => void;
@@ -17,15 +17,12 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
-    const [username, setUsername] = useState<string | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const token = authService.getToken();
-        if (token) {
-            // TODO: unpack jwt for get id, username, role, etc
-        }
+        setUser(authService.getCurrentUser());
         setIsLoading(false);
     }, []);
 
@@ -34,9 +31,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         setError(null);
 
         try {
-            const response = await authService.login(credentials);
-            authService.setToken(response.token);
-            setUsername(credentials.username);
+            await authService.login(credentials);
+            setUser(authService.getCurrentUser());
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed');
             throw err;
@@ -46,12 +42,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     };
 
     const logout = () => {
-        authService.removeToken();
-        setUsername(null);
+        authService.logout();
+        setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{username, isLoading, login, logout, error}}>
+        <AuthContext.Provider value={{user, isLoading, login, logout, error}}>
             {children}
         </AuthContext.Provider>
     );

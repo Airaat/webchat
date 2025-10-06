@@ -82,8 +82,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({onSuccess, onLoginClick})
                 password: formData.password,
                 confirmPassword: formData.password
             };
-            const response = await authService.signup(request);
-            authService.setToken(response.token);
+            await authService.signup(request);
             onSuccess?.();
         } catch (e) {
             const message = 'Registration error:' + e;

@@ -1,4 +1,5 @@
-import type {LoginRequest, LoginResponse, SignupRequest} from "../types/auth.ts";
+import type {LoginRequest, LoginResponse, SignupRequest, User} from "../types/auth.ts";
+import {jwtService} from "./jwtService.ts";
 import {API_BASE_URL} from "../const.ts";
 
 class AuthService {
@@ -14,7 +15,9 @@ class AuthService {
             throw new Error(errorData.message || 'Login failed');
         }
 
-        return response.json();
+        const responseData: LoginResponse = await response.json();
+        this.setToken(responseData.token)
+        return responseData;
     }
 
     async signup(credentials: SignupRequest): Promise<LoginResponse> {
@@ -29,19 +32,31 @@ class AuthService {
             throw new Error(errorData.message || 'Sign up failed');
         }
 
-        return response.json();
+        const responseData: LoginResponse = await response.json();
+        this.setToken(responseData.token)
+        return responseData;
     }
 
-    setToken(token: string): void {
-        localStorage.setItem('authToken', token);
+    logout(): void {
+        localStorage.removeItem('authToken');
     }
 
-    getToken(): string | null {
+    getCurrentUser(): User | null {
+        const token = this.getToken();
+        return token ? jwtService.getUserFromToken(token) : null;
+    }
+
+    isAuthenticated(): boolean {
+        const token = this.getToken();
+        return !!token && !jwtService.isTokenExpired(token);
+    }
+
+    private getToken(): string | null {
         return localStorage.getItem('authToken');
     }
 
-    removeToken(): void {
-        localStorage.removeItem('authToken');
+    private setToken(token: string): void {
+        localStorage.setItem('authToken', token);
     }
 }
 
