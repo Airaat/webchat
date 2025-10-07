@@ -50,8 +50,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                 p: 2,
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100vh',
-                maxWidth: '800px',
+                height: '100%',
+                width: '100%',
+                maxWidth: '1000px',
                 margin: '0 auto',
                 gap: 2
             }}

@@ -4,3 +4,12 @@ export interface Message {
     content: string;
     timestamp: Date;
 }
+
+export interface ChatItem {
+    id: string;
+    name: string;
+    lastMessage?: string;
+    lastMessageTime?: Date;
+    unreadCount?: number;
+    isOnline?: boolean;
+}
