@@ -1,5 +1,5 @@
 import React from 'react';
-import {Container} from "@mui/material";
+import {Container, CssBaseline} from "@mui/material";
 import {useAuth} from "../../hooks/useAuth.ts";
 import {useNavigate} from "react-router-dom";
 import {ChatWindow} from "../../components/chat/ChatWindow.tsx";
@@ -19,13 +19,9 @@ export const ChatPage: React.FC = () => {
 
 
     return (
-        <Container
-            sx={{
-                display: 'flex',
-                justifyContent: 'center'
-            }}
-        >
-            <ChatWindow user={currentUser} />
+        <Container>
+            <CssBaseline/>
+            <ChatWindow user={currentUser}/>
         </Container>
     );
 }

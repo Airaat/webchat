@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Box, Button, List, ListItem, ListItemText} from "@mui/material";
 import {TextField} from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
@@ -12,12 +12,21 @@ interface ChatWindowProps {
 export const ChatWindow: React.FC = ({user}: ChatWindowProps) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [currentMessage, setCurrentMessage] = useState('');
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const handleSendMessage = () => {
         if (!currentMessage.trim()) return;
         const newMessage: Message = {
             id: Date.now(),
-            user: user!.username,
+            user: user?.username || '[system]',
             content: currentMessage,
             timestamp: new Date()
         };
@@ -37,40 +46,58 @@ export const ChatWindow: React.FC = ({user}: ChatWindowProps) => {
         <Box
             id="chat-window"
             sx={{
-                m: 4,
+                p: 2,
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
                 height: '100vh',
-                minWidth: '800px',
+                maxWidth: '800px',
+                margin: '0 auto',
                 gap: 2
             }}
         >
             <List
                 sx={{
+                    flex: 1,
                     p: 2,
                     width: '100%',
                     backgroundColor: 'background.paper',
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 1,
-                    height: '600px',
-                    overflow: 'auto'
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0
                 }}
             >
                 {messages.map((message) => (
-                    <ListItem key={message.id} sx={{py: 1}}>
+                    <ListItem
+                        key={message.id}
+                        sx={{
+                            py: 1,
+                            width: '100%',
+                            display: 'block'
+                        }}
+                    >
                         <ListItemText
                             primary={`${message.user}: ${message.content}`}
                             secondary={message.timestamp.toLocaleDateString()}
                             sx={{
-                                textWrap: 'pretty',
-                                // overflow: 'hidden'
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word',
+                                whiteSpace: 'normal',
+                                '& .MuiListItemText-primary': {
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
+                                },
+                                '& .MuiListItemText-secondary': {
+                                    whiteSpace: 'normal',
+                                }
                             }}
                         />
                     </ListItem>
                 ))}
+                <div ref={messagesEndRef}/>
             </List>
             <Box
                 className="input-container"
@@ -79,6 +106,7 @@ export const ChatWindow: React.FC = ({user}: ChatWindowProps) => {
                     flexFlow: 'row',
                     width: '100%',
                     gap: 1,
+                    flexShrink: 0,
                 }}
             >
                 <TextField
@@ -86,14 +114,27 @@ export const ChatWindow: React.FC = ({user}: ChatWindowProps) => {
                     fullWidth
                     value={currentMessage}
                     onChange={(e) => setCurrentMessage(e.target.value)}
-                    onKeyUp={handleKeyPress}
+                    onKeyDown={handleKeyPress}
                     placeholder="Type a message..."
+                    sx={{
+                        '& .MuiInputBase-root': {
+                            // Ensure text field doesn't cause layout issues
+                            alignItems: 'flex-start', // Better for multi-line
+                        }
+                    }}
+                    multiline
+                    maxRows={3}
                 />
 
                 <Button
                     variant="contained"
                     onClick={handleSendMessage}
                     disabled={!currentMessage.trim()}
+                    sx={{
+                        alignSelf: 'flex-end',
+                        height: '56px',
+                        width: '56px'
+                    }}
                 >
                     <SendIcon/>
                 </Button>
