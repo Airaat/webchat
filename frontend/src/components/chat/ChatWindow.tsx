@@ -6,11 +6,12 @@ import type {Message} from '../../types/chat';
 import type {User} from "../../types/auth.ts";
 
 interface ChatWindowProps {
-    user?: User
+    user?: User;
+    messages: Message[];
+    onSendMessage: (msg: Message) => void;
 }
 
-export const ChatWindow: React.FC = ({user}: ChatWindowProps) => {
-    const [messages, setMessages] = useState<Message[]>([]);
+export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMessage}) => {
     const [currentMessage, setCurrentMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +32,7 @@ export const ChatWindow: React.FC = ({user}: ChatWindowProps) => {
             timestamp: new Date()
         };
 
-        setMessages(prevMessages => [...prevMessages, newMessage]);
+        onSendMessage(newMessage);
         setCurrentMessage('');
     };
 
