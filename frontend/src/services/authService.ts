@@ -51,7 +51,7 @@ class AuthService {
         return !!token && !jwtService.isTokenExpired(token);
     }
 
-    private getToken(): string | null {
+    getToken(): string | null {
         return localStorage.getItem('authToken');
     }
 

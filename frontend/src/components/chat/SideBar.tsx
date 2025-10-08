@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Box,
     TextField,
@@ -11,7 +11,8 @@ import {
     InputAdornment
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import type {ChatItem} from "../../types/chat";
+import type {ChatItem, UserItem} from "../../types/chat";
+import {chatService} from "../../services/chatService";
 
 
 interface SideBarProps {
@@ -19,57 +20,64 @@ interface SideBarProps {
     selectedChatId?: string;
 }
 
-// Mock data - replace with actual data from your API
-const mockChatUsers: ChatItem[] = [
-    {
-        id: '1',
-        name: 'John Doe',
-        lastMessage: 'Hello there!',
-        lastMessageTime: new Date(),
-        unreadCount: 2,
-        isOnline: true
-    },
-    {
-        id: '2',
-        name: 'Jane Smith',
-        lastMessage: 'How are you?',
-        lastMessageTime: new Date(Date.now() - 3600000),
-        unreadCount: 0,
-        isOnline: false
-    },
-    {
-        id: '3',
-        name: 'Mike Johnson',
-        lastMessage: 'See you tomorrow',
-        lastMessageTime: new Date(Date.now() - 86400000),
-        unreadCount: 1,
-        isOnline: true
-    },
-    // Add more mock users up to 20 or more for testing scroll
-    ...Array.from({length: 17}, (_, i) => ({
-        id: (i + 4).toString(),
-        name: `User ${i + 4}`,
-        lastMessage: `Last message from user ${i + 4}`,
-        lastMessageTime: new Date(Date.now() - (i * 3600000)),
-        unreadCount: i % 3,
-        isOnline: i % 2 === 0
-    }))
-];
-
 export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [chats] = useState<ChatItem[]>(mockChatUsers);
+    const [chats, setChats] = useState<ChatItem[]>([]);
+    const [searchResults, setSearchResults] = useState<UserItem[]>([]);
+    const [isSearching, setIsSearching] = useState<boolean>(false);
 
-    const filteredChats = chats.filter(chat =>
-        chat.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        loadChats();
+    }, []);
 
-    const formatTime = (date: Date) => {
+    useEffect(() => {
+        if (searchTerm.trim()) {
+            searchUsers(searchTerm);
+        } else {
+            setSearchResults([]);
+            setIsSearching(false);
+        }
+    }, [searchTerm]);
+
+    const loadChats = async () => {
+        try {
+            const chatsData = await chatService.getChats();
+            setChats(chatsData.chats);
+        } catch (e) {
+            console.error('Failed to load chats:', e);
+        }
+    };
+
+    const searchUsers = async (username: string) => {
+        try {
+            setIsSearching(true);
+            const users = await chatService.searchUsers(username);
+            setSearchResults(users);
+        } catch (e) {
+            console.error('Failed to search users:', e);
+            setSearchResults([]);
+        }
+    };
+
+    const handleUserSelect = async (user: UserItem) => {
+        try {
+            const chatItem = await chatService.createPrivateChat(Number.parseInt(user.id));
+            setChats(prev => [chatItem, ...prev]);
+            onChatSelect(chatItem);
+            setSearchTerm('');
+            setSearchResults([]);
+        } catch (e) {
+            console.error('Failed to create chat:', e);
+        }
+    };
+
+    const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
         const now = new Date();
         const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
         if (diffInHours < 24) {
-            return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hour12: false});
         } else {
             return date.toLocaleDateString([], {month: 'short', day: 'numeric'});
         }
@@ -92,7 +100,7 @@ export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) 
                 <TextField
                     fullWidth
                     size="small"
-                    placeholder="Search chats..."
+                    placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
@@ -110,7 +118,7 @@ export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) 
                 />
             </Box>
 
-            {/* Chat List */}
+            {/* Chat/User List */}
             <List
                 sx={{
                     flex: 1,
@@ -128,54 +136,29 @@ export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) 
                     },
                 }}
             >
-                {filteredChats.slice(0, 20).map((chat) => (
-                    <ListItem key={chat.id} disablePadding>
-                        <ListItemButton
-                            selected={selectedChatId === chat.id}
-                            onClick={() => onChatSelect(chat)}
-                            sx={{
-                                py: 1.5,
-                                px: 2,
-                                borderBottom: '1px solid',
-                                borderColor: 'divider',
-                                '&.Mui-selected': {
-                                    backgroundColor: 'action.selected',
-                                    '&:hover': {
-                                        backgroundColor: 'action.selected',
-                                    }
-                                }
-                            }}
-                        >
-                            <Avatar
+                {isSearching ? (
+                    // Search results - users
+                    searchResults.map((user) => (
+                        <ListItem key={user.id} disablePadding>
+                            <ListItemButton
+                                onClick={() => handleUserSelect(user)}
                                 sx={{
-                                    width: 48,
-                                    height: 48,
-                                    mr: 2,
-                                    position: 'relative',
-                                    '&::after': chat.isOnline ? {
-                                        content: '""',
-                                        position: 'absolute',
-                                        bottom: 2,
-                                        right: 2,
-                                        width: 12,
-                                        height: 12,
-                                        backgroundColor: 'success.main',
-                                        borderRadius: '50%',
-                                        border: '2px solid',
-                                        borderColor: 'background.paper'
-                                    } : {}
+                                    py: 1.5,
+                                    px: 2,
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
                                 }}
                             >
-                                {chat.name.charAt(0)}
-                            </Avatar>
-
-                            <Box sx={{flex: 1, minWidth: 0}}>
-                                <Box sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    mb: 0.5
-                                }}>
+                                <Avatar
+                                    sx={{
+                                        width: 48,
+                                        height: 48,
+                                        mr: 2,
+                                    }}
+                                >
+                                    {user.username.charAt(0)}
+                                </Avatar>
+                                <Box sx={{flex: 1, minWidth: 0}}>
                                     <Typography
                                         variant="subtitle1"
                                         sx={{
@@ -185,58 +168,139 @@ export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) 
                                             whiteSpace: 'nowrap'
                                         }}
                                     >
-                                        {chat.name}
+                                        {user.username}
                                     </Typography>
-                                    {chat.lastMessageTime && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            {formatTime(chat.lastMessageTime)}
-                                        </Typography>
-                                    )}
-                                </Box>
-
-                                <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                     <Typography
                                         variant="body2"
                                         color="text.secondary"
-                                        sx={{
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                            flex: 1
-                                        }}
                                     >
-                                        {chat.lastMessage}
+                                        Start new chat
                                     </Typography>
+                                </Box>
+                            </ListItemButton>
+                        </ListItem>
+                    ))
+                ) : (
+                    // Existing chats
+                    chats.map((chat) => (
+                        <ListItem key={chat.id} disablePadding>
+                            <ListItemButton
+                                selected={selectedChatId === chat.id}
+                                onClick={() => onChatSelect(chat)}
+                                sx={{
+                                    py: 1.5,
+                                    px: 2,
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'action.selected',
+                                        '&:hover': {
+                                            backgroundColor: 'action.selected',
+                                        }
+                                    }
+                                }}
+                            >
+                                <Avatar
+                                    sx={{
+                                        width: 48,
+                                        height: 48,
+                                        mr: 2,
+                                        position: 'relative',
+                                        '&::after': chat.isOnline ? {
+                                            content: '""',
+                                            position: 'absolute',
+                                            bottom: 2,
+                                            right: 2,
+                                            width: 12,
+                                            height: 12,
+                                            backgroundColor: 'success.main',
+                                            borderRadius: '50%',
+                                            border: '2px solid',
+                                            borderColor: 'background.paper'
+                                        } : {}
+                                    }}
+                                >
+                                    {chat.title.charAt(0)}
+                                </Avatar>
 
-                                    {chat.unreadCount > 0 && (
-                                        <Box
+                                <Box sx={{flex: 1, minWidth: 0}}>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        mb: 0.5
+                                    }}>
+                                        <Typography
+                                            variant="subtitle1"
                                             sx={{
-                                                backgroundColor: 'primary.main',
-                                                color: 'primary.contrastText',
-                                                borderRadius: '50%',
-                                                width: 20,
-                                                height: 20,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 'bold',
-                                                ml: 1
+                                                fontWeight: 'medium',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
                                             }}
                                         >
-                                            {chat.unreadCount}
-                                        </Box>
-                                    )}
-                                </Box>
-                            </Box>
-                        </ListItemButton>
-                    </ListItem>
-                ))}
+                                            {chat.title}
+                                        </Typography>
+                                        {chat.lastMessageAt && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {formatTime(chat.lastMessageAt)}
+                                            </Typography>
+                                        )}
+                                    </Box>
 
-                {filteredChats.length === 0 && (
+                                    <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                flex: 1
+                                            }}
+                                        >
+                                            {chat.lastMessage}
+                                        </Typography>
+
+                                        {chat.unreadCount > 0 && (
+                                            <Box
+                                                sx={{
+                                                    backgroundColor: 'primary.main',
+                                                    color: 'primary.contrastText',
+                                                    borderRadius: '50%',
+                                                    width: 20,
+                                                    height: 20,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 'bold',
+                                                    ml: 1
+                                                }}
+                                            >
+                                                {chat.unreadCount}
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Box>
+                            </ListItemButton>
+                        </ListItem>
+                    ))
+                )}
+
+                {isSearching && searchResults.length === 0 && (
                     <ListItem>
                         <ListItemText
-                            primary="No chats found"
+                            primary="No users found"
+                            sx={{textAlign: 'center', color: 'text.secondary'}}
+                        />
+                    </ListItem>
+                )}
+
+                {!isSearching && chats.length === 0 && (
+                    <ListItem>
+                        <ListItemText
+                            primary="No chats yet"
                             sx={{textAlign: 'center', color: 'text.secondary'}}
                         />
                     </ListItem>
