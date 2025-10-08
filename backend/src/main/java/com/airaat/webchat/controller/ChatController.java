@@ -6,6 +6,7 @@ import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.ChatItem;
 import com.airaat.webchat.domain.dto.response.ChatListResponse;
 import com.airaat.webchat.domain.enums.ChatType;
+import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.User;
 import com.airaat.webchat.service.ChatService;
 import com.airaat.webchat.service.UserService;
@@ -41,12 +42,15 @@ class ChatController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody @Valid CreateChatRequest request) {
+    public ResponseEntity<ChatItem> create(@RequestBody @Valid CreateChatRequest request) {
         User current = userService.current();
+        ChatItem chatItem = null;
 
         if (request.getChatType() == ChatType.PRIVATE) {
             User target = userService.getById(request.getUserIds().getFirst());
-            chatService.createPrivate(List.of(current, target));
+            Chat chat = chatService.createPrivate(List.of(current, target));
+            chatItem = ChatItem.from(chat);
+            chatItem.setTitle(target.getUsername());
         } else {
             ChatGroupDTO dto = ChatGroupDTO.builder()
                     .name(request.getName())
@@ -55,10 +59,11 @@ class ChatController {
                     .members(userService.getByIds(request.getUserIds()))
                     .build();
 
-            chatService.createGroup(dto);
+            Chat chat = chatService.createGroup(dto);
+            chatItem = ChatItem.from(chat);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(chatItem);
     }
 
     @PostMapping("/mute")

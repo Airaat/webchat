@@ -47,7 +47,7 @@ public class ChatService {
     }
 
     @Transactional
-    public void createPrivate(List<User> users) {
+    public Chat createPrivate(List<User> users) {
         // TODO: we need to separate validation logic from services
         if (users.isEmpty()) {
             throw new ValidationError("User list is empty");
@@ -71,10 +71,11 @@ public class ChatService {
             member.setUser(user);
             participantRepository.save(member);
         }
+        return chat;
     }
 
     @Transactional
-    public void createGroup(ChatGroupDTO dto) {
+    public Chat createGroup(ChatGroupDTO dto) {
         if (dto.getMembers().isEmpty()) {
             throw new ValidationError("User list is empty");
         }
@@ -102,6 +103,7 @@ public class ChatService {
         chat.setType(ChatType.GROUP);
         chat.setGroup(group);
         repository.save(chat);
+        return chat;
     }
 
     @Transactional
