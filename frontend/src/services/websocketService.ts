@@ -49,10 +49,10 @@ class WebSocketService {
                 connectHeaders: {
                     Authorization: `Bearer ${token}`
                 },
-                // Remove debug logs in production
-                debug: (str) => {
-                    console.log('STOMP:', str);
-                },
+                // TODO: Remove debug logs in production
+                // debug: (str) => {
+                //     console.log('STOMP:', str);
+                // },
                 onConnect: () => {
                     this.isConnected = true;
                     console.log('WebSocket connected');

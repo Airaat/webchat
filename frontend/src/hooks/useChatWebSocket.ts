@@ -26,10 +26,10 @@ export const useChatWebSocket = ({
         webSocketService.send(`/app/chat/${chatId}/send`, message);
     }, [chatId]);
 
-    const sendTyping = useCallback((isTyping: boolean) => {
+    const sendTyping = useCallback((typing: boolean) => {
         if (!chatId) return;
 
-        webSocketService.send(`/app/chat/${chatId}/typing`, {isTyping});
+        webSocketService.send(`/app/chat/${chatId}/typing`, {typing});
     }, [chatId]);
 
     const subscribeToChat = useCallback(() => {

@@ -30,7 +30,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const handleTypingUpdate = useCallback((username: string, isTyping: boolean) => {
         setTypingUsers(prev => {
             const updated = new Set(prev);
-            if (isTyping) {
+            if (isTyping && username !== user.username) {
                 updated.add(username);
             } else {
                 updated.delete(username);
@@ -53,6 +53,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     // Typing indicator with debounce
     useEffect(() => {
         if (!currentMessage.trim()) {
+            // If message becomes empty and we were typing, stop
             if (isTyping) {
                 sendTyping(false);
                 setIsTyping(false);
@@ -60,10 +61,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             return;
         }
 
-        if (!isTyping) {
-            sendTyping(true);
-            setIsTyping(true);
-        }
+    }, [currentMessage, isTyping, sendTyping]);
+
+// Separate effect for the debounced "stop typing"
+    useEffect(() => {
+        if (!isTyping) return;
 
         const timeoutId = setTimeout(() => {
             sendTyping(false);
@@ -94,6 +96,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     };
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
+        // Start typing if we have content and aren't already typing
+        if (!isTyping) {
+            sendTyping(true);
+            setIsTyping(true);
+        }
+
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             handleSendMessage();

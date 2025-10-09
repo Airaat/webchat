@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TypingRequest {
-    private boolean isTyping;
+    private boolean typing;
 }
