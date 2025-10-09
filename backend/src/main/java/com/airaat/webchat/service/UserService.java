@@ -28,6 +28,9 @@ public class UserService implements UserDetailsService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * @deprecated Use Principal.getName() + getByUsername() instead
+     */
     public User current() {
         SecurityContext context = SecurityContextHolder.getContext();
         return (User) context.getAuthentication().getPrincipal();
@@ -37,6 +40,11 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return repository.findByUsername(username).orElseThrow(
                 () -> new UsernameNotFoundException("User with username \"" + username + "\" not found"));
+    }
+
+    public User getByUsername(String username) {
+        return repository.findByUsername(username).orElseThrow(
+                () -> new EntityNotFoundException("User with username \"" + username + "\" not found"));
     }
 
     public User getById(Long id) {

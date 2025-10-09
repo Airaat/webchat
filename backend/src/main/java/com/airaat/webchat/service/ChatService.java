@@ -32,6 +32,10 @@ public class ChatService {
     private final ChatGroupRepository groupRepository;
     private final ChatGroupMemberRepository groupMemberRepository;
 
+    public boolean hasAccess(Long chatId, User author) {
+        return repository.existsByIdAndUserId(chatId, author.getId());
+    }
+
     public ChatItem getByIdForUser(Long id, User user) {
         ChatView view = repository.findByIdForUser(id, user.getId()).orElseThrow(
                 () -> new EntityNotFoundException("Chat with id " + id + " not found"));
