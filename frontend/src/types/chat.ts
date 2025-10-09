@@ -1,7 +1,20 @@
+export type MessageType = 'TEXT' | 'FILE' | 'SYSTEM';
+
 export interface Message {
     id: number;
-    user: string;
+    type: MessageType;
     content: string;
+    authorId: number;
+    authorUsername: string;
+    timestamp: Date;
+    edited: boolean;
+}
+
+export interface MessageRequest {
+    type: MessageType;
+    content: string;
+    authorId: number;
+    authorUsername: string;
     timestamp: Date;
 }
 

@@ -27,9 +27,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
         if (!currentMessage.trim()) return;
         const newMessage: Message = {
             id: Date.now(),
-            user: user?.username || '[system]',
+            type: 'TEXT',
             content: currentMessage,
-            timestamp: new Date()
+            authorId: user?.id || 0,
+            authorUsername: user?.username || '[system]',
+            timestamp: new Date(),
+            edited: false
         };
 
         onSendMessage(newMessage);
@@ -82,7 +85,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                         }}
                     >
                         <ListItemText
-                            primary={`${message.user}: ${message.content}`}
+                            primary={`${message.authorUsername}: ${message.content}`}
                             secondary={message.timestamp.toLocaleDateString()}
                             sx={{
                                 wordWrap: 'break-word',

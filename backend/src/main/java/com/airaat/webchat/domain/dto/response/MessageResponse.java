@@ -10,8 +10,9 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class MessageResponse {
+    private Long id;
     private MessageType type;
-    private String message;
+    private String content;
     private Long authorId;
     private String authorUsername;
     private LocalDateTime timestamp;
@@ -21,8 +22,9 @@ public class MessageResponse {
         boolean edited = message.getEditedAt() != null;
 
         return MessageResponse.builder()
+                .id(message.getId())
                 .type(message.getType())
-                .message(message.getContent())
+                .content(message.getContent())
                 .authorId(message.getAuthor().getId())
                 .authorUsername(message.getAuthor().getUsername())
                 .timestamp(edited ? message.getEditedAt() : message.getCreatedAt())
