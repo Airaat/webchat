@@ -1,6 +1,7 @@
 package com.airaat.webchat.service;
 
 import com.airaat.webchat.domain.dto.request.ChatMessageRequest;
+import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.Message;
 import com.airaat.webchat.domain.model.User;
 import com.airaat.webchat.repository.MessageRepository;
@@ -29,8 +30,9 @@ public class MessageService {
     }
 
     @Transactional
-    public Message save(ChatMessageRequest dto, User author) {
+    public Message save(Chat chat, ChatMessageRequest dto, User author) {
         Message message = Message.builder()
+                .chat(chat)
                 .author(author)
                 .content(dto.getContent())
                 .type(dto.getType())

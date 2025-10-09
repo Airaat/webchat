@@ -6,6 +6,7 @@ import com.airaat.webchat.domain.dto.request.TypingRequest;
 import com.airaat.webchat.domain.dto.response.ErrorResponse;
 import com.airaat.webchat.domain.dto.response.MessageResponse;
 import com.airaat.webchat.domain.dto.response.TypingResponse;
+import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.Message;
 import com.airaat.webchat.domain.model.User;
 import com.airaat.webchat.service.ChatService;
@@ -43,9 +44,10 @@ public class RealTimeChatController {
         if (!chatService.hasAccess(chatId, author)) {
             throw new SecurityException("You do not have permission to access this chat");
         }
+        Chat chat = chatService.getById(chatId);
 
         try {
-            Message message = messageService.save(request, author);
+            Message message = messageService.save(chat, request, author);
             log.info("Sending message from [{}] to chat {}", request.getAuthorUsername(), chatId);
             messagingTemplate.convertAndSend("/topic/chat/" + chatId, MessageResponse.of(message));
         } catch (MessagingException e) {
