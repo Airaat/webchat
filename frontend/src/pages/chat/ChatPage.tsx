@@ -46,7 +46,8 @@ export const ChatPage: React.FC = () => {
             <ChatWindow
                 user={currentUser}
                 messages={messages}
-                onSendMessage={handleSendMessages}
+                chatId={selectedChat?.id}
+                onNewMessage={handleSendMessages}
             />
         </Container>
     );

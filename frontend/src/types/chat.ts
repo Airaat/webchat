@@ -18,6 +18,13 @@ export interface MessageRequest {
     timestamp: Date;
 }
 
+export interface TypingNotification {
+    chatId: number;
+    username: string;
+    typing: boolean;
+    timestamp: Date;
+}
+
 export interface ChatListData {
     chats: ChatItem[];
     length: number;

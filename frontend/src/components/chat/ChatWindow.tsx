@@ -1,42 +1,96 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Box, Button, List, ListItem, ListItemText} from "@mui/material";
-import {TextField} from "@mui/material";
+import React, {useState, useCallback, useEffect} from 'react';
+import {Box, Button, List, ListItem, ListItemText, TextField, Typography} from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
-import type {Message} from '../../types/chat';
-import type {User} from "../../types/auth.ts";
+import type {Message, MessageRequest} from "../../types/chat";
+import type {User} from '../../types/auth'
+import {useChatWebSocket} from '../../hooks/useChatWebSocket';
 
 interface ChatWindowProps {
-    user?: User;
+    user: User;
     messages: Message[];
-    onSendMessage: (msg: Message) => void;
+    onNewMessage: (message: Message) => void;
+    chatId?: string;
 }
 
-export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMessage}) => {
+export const ChatWindow: React.FC<ChatWindowProps> = ({
+                                                          user,
+                                                          messages,
+                                                          onNewMessage,
+                                                          chatId
+                                                      }) => {
     const [currentMessage, setCurrentMessage] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [isTyping, setIsTyping] = useState(false);
+    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+    const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
-    };
+    const handleMessageReceived = useCallback((newMessage: Message) => {
+        onNewMessage(newMessage);
+    }, [onNewMessage]);
 
+    const handleTypingUpdate = useCallback((username: string, isTyping: boolean) => {
+        setTypingUsers(prev => {
+            const updated = new Set(prev);
+            if (isTyping) {
+                updated.add(username);
+            } else {
+                updated.delete(username);
+            }
+            return updated;
+        });
+    }, []);
+
+    const handleConnectionChange = useCallback((connected: boolean) => {
+        setConnectionStatus(connected ? 'connected' : 'disconnected');
+    }, []);
+
+    const {sendMessage, sendTyping, isConnected} = useChatWebSocket({
+        chatId,
+        onMessageReceived: handleMessageReceived,
+        onTypingUpdate: handleTypingUpdate,
+        onConnectionChange: handleConnectionChange
+    });
+
+    // Typing indicator with debounce
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (!currentMessage.trim()) {
+            if (isTyping) {
+                sendTyping(false);
+                setIsTyping(false);
+            }
+            return;
+        }
+
+        if (!isTyping) {
+            sendTyping(true);
+            setIsTyping(true);
+        }
+
+        const timeoutId = setTimeout(() => {
+            sendTyping(false);
+            setIsTyping(false);
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [currentMessage, isTyping, sendTyping]);
 
     const handleSendMessage = () => {
         if (!currentMessage.trim()) return;
-        const newMessage: Message = {
-            id: Date.now(),
+        const message: MessageRequest = {
             type: 'TEXT',
-            content: currentMessage,
-            authorId: user?.id || 0,
-            authorUsername: user?.username || '[system]',
-            timestamp: new Date(),
-            edited: false
-        };
+            content: currentMessage.trim(),
+            authorId: user.id,
+            authorUsername: user.username,
+            timestamp: new Date()
+        }
 
-        onSendMessage(newMessage);
+        sendMessage(message);
         setCurrentMessage('');
+
+        // Stop typing indicator
+        if (isTyping) {
+            sendTyping(false);
+            setIsTyping(false);
+        }
     };
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -46,9 +100,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
         }
     };
 
+    const typingIndicatorText = typingUsers.size > 0
+        ? `${Array.from(typingUsers).join(', ')} ${typingUsers.size === 1 ? 'is' : 'are'} typing...`
+        : '';
+
     return (
         <Box
-            id="chat-window"
             sx={{
                 p: 2,
                 display: 'flex',
@@ -60,6 +117,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                 gap: 2
             }}
         >
+            {/* Connection Status */}
+            <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <Typography variant="h6">
+                    {chatId ? `Chat ${chatId}` : 'Select a chat'}
+                </Typography>
+                <Typography
+                    variant="caption"
+                    color={connectionStatus === 'connected' ? 'success.main' : 'error.main'}
+                >
+                    {connectionStatus.toUpperCase()}
+                </Typography>
+            </Box>
+
+            {/* Messages List */}
             <List
                 sx={{
                     flex: 1,
@@ -86,7 +157,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                     >
                         <ListItemText
                             primary={`${message.authorUsername}: ${message.content}`}
-                            secondary={message.timestamp.toLocaleDateString()}
+                            secondary={new Date(message.timestamp).toLocaleTimeString()}
                             sx={{
                                 wordWrap: 'break-word',
                                 overflowWrap: 'break-word',
@@ -102,10 +173,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                         />
                     </ListItem>
                 ))}
-                <div ref={messagesEndRef}/>
+
+                {/* Typing Indicator */}
+                {typingIndicatorText && (
+                    <ListItem>
+                        <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                            {typingIndicatorText}
+                        </Typography>
+                    </ListItem>
+                )}
             </List>
+
+            {/* Input Area */}
             <Box
-                className="input-container"
                 sx={{
                     display: 'flex',
                     flexFlow: 'row',
@@ -121,12 +201,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                     onChange={(e) => setCurrentMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                     placeholder="Type a message..."
-                    sx={{
-                        '& .MuiInputBase-root': {
-                            // Ensure text field doesn't cause layout issues
-                            alignItems: 'flex-start', // Better for multi-line
-                        }
-                    }}
+                    disabled={!isConnected || !chatId}
                     multiline
                     maxRows={3}
                 />
@@ -134,7 +209,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
                 <Button
                     variant="contained"
                     onClick={handleSendMessage}
-                    disabled={!currentMessage.trim()}
+                    disabled={!currentMessage.trim() || !isConnected || !chatId}
                     sx={{
                         alignSelf: 'flex-end',
                         height: '56px',
@@ -146,4 +221,4 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user, messages, onSendMes
             </Box>
         </Box>
     );
-}
+};
