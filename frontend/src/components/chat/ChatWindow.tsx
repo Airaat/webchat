@@ -1,7 +1,7 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {Box, Button, List, ListItem, ListItemText, TextField, Typography} from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
-import type {Message, MessageRequest} from "../../types/chat";
+import type {ChatItem, Message, MessageRequest} from "../../types/chat";
 import type {User} from '../../types/auth'
 import {useChatWebSocket} from '../../hooks/useChatWebSocket';
 
@@ -9,14 +9,14 @@ interface ChatWindowProps {
     user: User;
     messages: Message[];
     onNewMessage: (message: Message) => void;
-    chatId?: string;
+    chat: ChatItem | null;
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({
                                                           user,
                                                           messages,
                                                           onNewMessage,
-                                                          chatId
+                                                          chat
                                                       }) => {
     const [currentMessage, setCurrentMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -44,7 +44,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }, []);
 
     const {sendMessage, sendTyping, isConnected} = useChatWebSocket({
-        chatId,
+        chatId: chat?.id,
         onMessageReceived: handleMessageReceived,
         onTypingUpdate: handleTypingUpdate,
         onConnectionChange: handleConnectionChange
@@ -128,7 +128,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             {/* Connection Status */}
             <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                 <Typography variant="h6">
-                    {chatId ? `Chat ${chatId}` : 'Select a chat'}
+                    {chat ? `Chat ${chat.title}` : 'Select a chat'}
                 </Typography>
                 <Typography
                     variant="caption"
@@ -209,7 +209,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     onChange={(e) => setCurrentMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                     placeholder="Type a message..."
-                    disabled={!isConnected || !chatId}
+                    disabled={!isConnected || !chat}
                     multiline
                     maxRows={3}
                 />
@@ -217,7 +217,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 <Button
                     variant="contained"
                     onClick={handleSendMessage}
-                    disabled={!currentMessage.trim() || !isConnected || !chatId}
+                    disabled={!currentMessage.trim() || !isConnected || !chat}
                     sx={{
                         alignSelf: 'flex-end',
                         height: '56px',
