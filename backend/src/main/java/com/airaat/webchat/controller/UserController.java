@@ -9,7 +9,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @RestController
@@ -25,8 +27,11 @@ public class UserController {
     }
 
     @GetMapping("/find")
-    public ResponseEntity<List<UserResponse>> findByUsername(@RequestParam String username) {
-        Stream<User> users = userService.findByUsername(username).stream();
+    public ResponseEntity<List<UserResponse>> findByUsername(@RequestParam String username,
+                                                             Principal principal) {
+        Stream<User> users = userService.findByUsername(username).stream()
+                .filter(u -> !Objects.equals(u.getUsername(), principal.getName()));
+
         return ResponseEntity.ok(users.map(UserResponse::from).toList());
     }
 
