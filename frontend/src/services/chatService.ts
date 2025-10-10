@@ -1,5 +1,5 @@
 import {authService} from "./authService.ts";
-import type {ChatItem, ChatListData, UserItem} from "../types/chat.ts";
+import type {ChatItem, ChatListData, PaginatedMessages, UserItem} from "../types/chat.ts";
 import {CHAT_URL, USER_URL} from "../const.ts";
 
 class ChatService {
@@ -22,6 +22,24 @@ class ChatService {
 
         if (!response.ok) {
             throw new Error('Failed to fetch chats');
+        }
+
+        return await response.json();
+    }
+
+    async getChatMessages(chatId: string, page: number = 0, size: number = 50): Promise<PaginatedMessages> {
+        const params = new URLSearchParams({
+            p: page.toString(),
+            s: size.toString(),
+        }).toString();
+
+        const response = await fetch(`${CHAT_URL}/${chatId}/messages?${params}`, {
+            method: 'GET',
+            headers: this.headers,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch chat');
         }
 
         return await response.json();

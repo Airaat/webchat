@@ -1,19 +1,26 @@
 import React from 'react';
-import {Box, List, ListItem, ListItemText} from '@mui/material';
+import {Box, List, ListItem, ListItemText, CircularProgress} from '@mui/material';
 import type {ChatItem, UserItem} from '../../types/chat';
-import {useChats} from '../../hooks/useChats';
 import {useUserSearch} from '../../hooks/useUserSearch';
 import {SearchBar} from './SearchBar';
 import {UserListItem} from './UserListItem';
 import {ChatList} from './ChatList';
 
 interface SideBarProps {
+    chats: ChatItem[];
     onChatSelect: (chat: ChatItem) => void;
+    onChatCreate: (user: UserItem) => Promise<ChatItem>;
     selectedChatId?: string;
+    loading?: boolean;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) => {
-    const {chats, createChat} = useChats();
+export const SideBar: React.FC<SideBarProps> = ({
+                                                    chats,
+                                                    onChatCreate,
+                                                    onChatSelect,
+                                                    selectedChatId,
+                                                    loading = false
+                                                }) => {
     const {
         searchResults,
         searchTerm,
@@ -24,7 +31,7 @@ export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) 
 
     const handleUserSelect = async (user: UserItem) => {
         try {
-            const newChat = await createChat(user);
+            const newChat = await onChatCreate(user);
             onChatSelect(newChat);
             resetSearch();
         } catch (error) {
@@ -77,7 +84,11 @@ export const SideBar: React.FC<SideBarProps> = ({onChatSelect, selectedChatId}) 
                     },
                 }}
             >
-                {isSearchActive ? (
+                {loading ? (
+                    <ListItem sx={{justifyContent: 'center'}}>
+                        <CircularProgress size={24}/>
+                    </ListItem>
+                ) : isSearchActive ? (
                     // Search results - users
                     searchResults.length > 0 ? (
                         searchResults.map((user) => (

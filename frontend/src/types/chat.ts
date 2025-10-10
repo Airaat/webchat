@@ -41,10 +41,39 @@ export interface ChatItem {
     type: 'PRIVATE' | 'GROUP';
     groupRole?: 'MEMBER' | 'ADMIN' | 'OWNER';
     lastMessage?: string;
-    lastMessageAt?: Date;
+    lastMessageAt: Date;
     mutedUntil?: Date;
     unreadCount?: number;
     isOnline?: boolean;
+}
+
+interface Sort {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+}
+
+export interface Page {
+    pageNumber: number;
+    pageSize: number;
+    sort: Sort,
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+}
+
+export interface PaginatedMessages {
+    content: Message[];
+    pageable: Page;
+    last: boolean;
+    totalPages: number;
+    totalElements: number;
+    first: boolean;
+    size: number;
+    number: number;
+    sort: Sort;
+    numberOfElements: number;
+    empty: boolean;
 }
 
 export interface UserItem {
