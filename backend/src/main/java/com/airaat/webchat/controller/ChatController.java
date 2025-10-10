@@ -5,7 +5,7 @@ import com.airaat.webchat.domain.dto.request.CreateChatRequest;
 import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.ChatItem;
 import com.airaat.webchat.domain.dto.response.ChatListResponse;
-import com.airaat.webchat.domain.dto.response.MessageResponse;
+import com.airaat.webchat.domain.dto.response.PaginatedMessages;
 import com.airaat.webchat.domain.enums.ChatType;
 import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.Message;
@@ -74,10 +74,10 @@ class ChatController {
     }
 
     @GetMapping("/{chatId}/messages")
-    public Page<MessageResponse> chatHistory(@PathVariable Long chatId,
-                                             @RequestParam(defaultValue = "0") int p,
-                                             @RequestParam(defaultValue = "50") int s,
-                                             Principal principal) {
+    public PaginatedMessages chatHistory(@PathVariable Long chatId,
+                                         @RequestParam(defaultValue = "0") int p,
+                                         @RequestParam(defaultValue = "50") int s,
+                                         Principal principal) {
         User user = userService.getByUsername(principal.getName());
         if (!chatService.hasAccess(chatId, user)) {
             throw new SecurityException("You do not have permission to access chat history");
@@ -88,8 +88,8 @@ class ChatController {
             throw new ValidationError("Invalid parameter: page " + purpose);
         }
 
-        Page<Message> messages = messageService.getRecentMessages(chatId, PageRequest.of(p, s));
-        return messages.map(MessageResponse::of);
+        Page<Message> page = messageService.getRecentMessages(chatId, PageRequest.of(p, s));
+        return PaginatedMessages.of(page);
     }
 
     @PostMapping("/mute")

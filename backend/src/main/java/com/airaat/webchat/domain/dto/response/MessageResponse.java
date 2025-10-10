@@ -13,6 +13,7 @@ public class MessageResponse {
     private Long id;
     private MessageType type;
     private String content;
+    private Long chatId;
     private Long authorId;
     private String authorUsername;
     private LocalDateTime timestamp;
@@ -25,6 +26,7 @@ public class MessageResponse {
                 .id(message.getId())
                 .type(message.getType())
                 .content(message.getContent())
+                .chatId(message.getChat().getId())
                 .authorId(message.getAuthor().getId())
                 .authorUsername(message.getAuthor().getUsername())
                 .timestamp(edited ? message.getEditedAt() : message.getCreatedAt())
