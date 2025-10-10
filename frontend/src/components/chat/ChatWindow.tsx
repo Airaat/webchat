@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {Box, Button, List, ListItem, ListItemText, TextField, Typography} from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
 import type {ChatItem, Message, MessageRequest} from "../../types/chat";
@@ -19,6 +19,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                                           chat
                                                       }) => {
     const [currentMessage, setCurrentMessage] = useState('');
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const [isTyping, setIsTyping] = useState(false);
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
@@ -38,6 +39,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             return updated;
         });
     }, []);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const handleConnectionChange = useCallback((connected: boolean) => {
         setConnectionStatus(connected ? 'connected' : 'disconnected');
@@ -106,6 +111,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             event.preventDefault();
             handleSendMessage();
         }
+    };
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
     };
 
     const typingIndicatorText = typingUsers.size > 0
@@ -181,6 +190,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                         />
                     </ListItem>
                 ))}
+                <div ref={messagesEndRef}/>
 
                 {/* Typing Indicator */}
                 {typingIndicatorText && (
