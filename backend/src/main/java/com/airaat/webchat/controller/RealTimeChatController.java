@@ -1,5 +1,6 @@
 package com.airaat.webchat.controller;
 
+import com.airaat.webchat.domain.dto.ChatUpdateDTO;
 import com.airaat.webchat.domain.dto.UserPresence;
 import com.airaat.webchat.domain.dto.request.ChatMessageRequest;
 import com.airaat.webchat.domain.dto.request.TypingRequest;
@@ -50,8 +51,25 @@ public class RealTimeChatController {
             Message message = messageService.save(chat, request, author);
             log.info("Sending message from [{}] to chat {}", request.getAuthorUsername(), chatId);
             messagingTemplate.convertAndSend("/topic/chat/" + chatId, MessageResponse.of(message));
+            sendChatUpdateToParticipants(chat, message);
         } catch (MessagingException e) {
             log.error("Error sending message from [{}] to chat {}: {}", principal.getName(), chatId, e.getMessage());
+        }
+    }
+
+    private void sendChatUpdateToParticipants(Chat chat, Message message) {
+        for (User user : chatService.getMembers(chat)) {
+            ChatUpdateDTO chatUpdate = ChatUpdateDTO.builder()
+                    .id(chat.getId())
+                    .lastMessage(message.getContent())
+                    .lastMessageAt(message.getCreatedAt())
+                    .build();
+
+            messagingTemplate.convertAndSendToUser(
+                    user.getUsername(),
+                    "/queue/chat-updates",
+                    chatUpdate
+            );
         }
     }
 

@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -116,6 +117,20 @@ public class ChatService {
         chat.setGroup(group);
         repository.save(chat);
         return chat;
+    }
+
+    public Set<User> getMembers(Chat chat) {
+        Set<User> chatMembers;
+        if (chat.getType() == ChatType.PRIVATE) {
+            chatMembers = chat.getParticipants().stream()
+                    .map(ChatParticipant::getUser)
+                    .collect(Collectors.toSet());
+        } else {
+            chatMembers = chat.getGroup().getMembers().stream()
+                    .map(ChatGroupMember::getUser)
+                    .collect(Collectors.toSet());
+        }
+        return chatMembers;
     }
 
     @Transactional
