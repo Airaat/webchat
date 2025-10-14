@@ -1,6 +1,6 @@
 import React from 'react';
 import {ListItem, ListItemButton, Avatar, Typography, Box} from '@mui/material';
-import type {UserItem} from '../../types/chat';
+import type {UserItem} from '../../../types/chat.ts';
 
 interface UserListItemProps {
     user: UserItem;

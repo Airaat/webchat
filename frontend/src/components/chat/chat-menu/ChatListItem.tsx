@@ -1,7 +1,7 @@
 import React from 'react';
 import {ListItem, ListItemButton, Avatar, Typography, Box} from '@mui/material';
-import type {ChatItem} from '../../types/chat';
-import {formatChatTime} from '../../utils/dateUtils';
+import type {ChatItem} from '../../../types/chat';
+import {formatChatTime} from '../../../utils/dateUtils';
 
 interface ChatListItemProps {
     chat: ChatItem;

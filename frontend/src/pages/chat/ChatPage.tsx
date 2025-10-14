@@ -3,7 +3,7 @@ import {Container, CssBaseline} from '@mui/material';
 import {useAuth} from '../../hooks/useAuth';
 import {useNavigate} from 'react-router-dom';
 import {ChatWindow} from '../../components/chat/ChatWindow';
-import {SideBar} from '../../components/chat/SideBar';
+import {ChatMenu} from '../../components/chat/chat-menu/ChatMenu';
 import type {Message, ChatItem, UserItem} from '../../types/chat';
 import {chatService} from '../../services/chatService';
 
@@ -94,7 +94,7 @@ export const ChatPage: React.FC = () => {
             }}
         >
             <CssBaseline/>
-            <SideBar
+            <ChatMenu
                 chats={chats}
                 selectedChatId={selectedChat?.id}
                 onChatSelect={handleChatSelect}
