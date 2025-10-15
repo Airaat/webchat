@@ -26,6 +26,13 @@ export interface TypingNotification {
     timestamp: Date;
 }
 
+export interface ChatNotification {
+    chatId: number;
+    action: 'CREATE' | 'UPDATE' | 'DELETE';
+    lastMessage: string;
+    lastMessageAt: Date;
+}
+
 export interface ChatListData {
     chats: ChatItem[];
     length: number;

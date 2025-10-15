@@ -1,19 +1,21 @@
 import {useEffect, useRef, useCallback} from 'react';
 import {webSocketService} from '../services/websocketService';
-import type {Message, MessageRequest, TypingNotification} from '../types/chat';
+import type {ChatNotification, Message, MessageRequest, TypingNotification} from '../types/chat';
 
 interface UseChatWebSocketProps {
     chatId?: string;
     onMessageReceived: (message: Message) => void;
     onTypingUpdate?: (username: string, isTyping: boolean) => void;
     onConnectionChange?: (connected: boolean) => void;
+    onNotificationReceived?: (notification: ChatNotification) => void;
 }
 
 export const useChatWebSocket = ({
                                      chatId,
                                      onMessageReceived,
                                      onTypingUpdate,
-                                     onConnectionChange
+                                     onConnectionChange,
+                                     onNotificationReceived
                                  }: UseChatWebSocketProps) => {
     const subscriptions = useRef<Map<string, string>>(new Map());
 
@@ -53,18 +55,9 @@ export const useChatWebSocket = ({
             subscriptions.current.set(`typing-${chatId}`, typingSub);
         }
 
-        // Subscribe to personal notifications
-        const notificationSub = webSocketService.subscribe(
-            `/user/queue/notifications`,
-            (notification) => {
-                console.log('Personal notification:', notification);
-            }
-        );
-        subscriptions.current.set('notifications', notificationSub);
-
         // Subscribe to errors
         const errorSub = webSocketService.subscribe(
-            `/user/queue/errors`,
+            '/user/queue/errors',
             (error) => {
                 console.error('WebSocket error:', error);
             }
@@ -72,6 +65,20 @@ export const useChatWebSocket = ({
         subscriptions.current.set('errors', errorSub);
 
     }, [chatId, onMessageReceived, onTypingUpdate]);
+
+    const subscribeToNotifications = useCallback(() => {
+        // Subscribe to personal notifications
+        const notificationSub = webSocketService.subscribe<ChatNotification>(
+            '/user/queue/notifications',
+            (notification) => {
+                // TODO: handle chatCreated, chatDeleted, chatUpdated, newMessage, messageDeleted
+                if (onNotificationReceived) {
+                    onNotificationReceived(notification);
+                }
+            }
+        );
+        subscriptions.current.set('notifications', notificationSub);
+    }, [onNotificationReceived]);
 
     const unsubscribeFromChat = useCallback(() => {
         subscriptions.current.forEach((subscriptionId, key) => {
@@ -84,8 +91,11 @@ export const useChatWebSocket = ({
     useEffect(() => {
         const handleConnectionChange = (connected: boolean) => {
             onConnectionChange?.(connected);
-            if (connected && chatId) {
-                subscribeToChat();
+            if (connected) {
+                subscribeToNotifications();
+                if (chatId) {
+                    subscribeToChat();
+                }
             } else {
                 unsubscribeFromChat();
             }
@@ -95,6 +105,7 @@ export const useChatWebSocket = ({
 
         // Initial connection
         webSocketService.connect().then(() => {
+            subscribeToNotifications();
             if (chatId) {
                 subscribeToChat();
             }
@@ -106,7 +117,7 @@ export const useChatWebSocket = ({
             unsubscribeFromChat();
             // Note: We don't disconnect WebSocket completely as it might be used by other components
         };
-    }, [chatId, subscribeToChat, unsubscribeFromChat, onConnectionChange]);
+    }, [chatId, subscribeToChat, unsubscribeFromChat, onConnectionChange, subscribeToNotifications]);
 
     return {
         sendMessage,

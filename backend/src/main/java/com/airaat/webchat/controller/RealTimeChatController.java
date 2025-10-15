@@ -1,12 +1,13 @@
 package com.airaat.webchat.controller;
 
-import com.airaat.webchat.domain.dto.ChatUpdateDTO;
+import com.airaat.webchat.domain.dto.ChatNotification;
 import com.airaat.webchat.domain.dto.UserPresence;
 import com.airaat.webchat.domain.dto.request.ChatMessageRequest;
 import com.airaat.webchat.domain.dto.request.TypingRequest;
 import com.airaat.webchat.domain.dto.response.ErrorResponse;
 import com.airaat.webchat.domain.dto.response.MessageResponse;
 import com.airaat.webchat.domain.dto.response.TypingResponse;
+import com.airaat.webchat.domain.enums.NotificationType;
 import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.Message;
 import com.airaat.webchat.domain.model.User;
@@ -61,8 +62,9 @@ public class RealTimeChatController {
 
     private void sendChatUpdateToParticipants(Chat chat, Message message) {
         for (User user : chatService.getMembers(chat)) {
-            ChatUpdateDTO chatUpdate = ChatUpdateDTO.builder()
-                    .id(chat.getId())
+            ChatNotification chatUpdate = ChatNotification.builder()
+                    .chatId(chat.getId())
+                    .action(NotificationType.UPDATE)
                     .lastMessage(message.getContent())
                     .lastMessageAt(message.getCreatedAt())
                     .build();

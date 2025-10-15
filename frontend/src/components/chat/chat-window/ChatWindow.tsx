@@ -1,6 +1,6 @@
 import React, {useState, useCallback} from 'react';
 import {Box} from '@mui/material';
-import type {ChatItem, Message, MessageRequest} from '../../../types/chat';
+import type {ChatItem, ChatNotification, Message, MessageRequest} from '../../../types/chat';
 import type {User} from '../../../types/auth'
 import {useChatWebSocket} from '../../../hooks/useChatWebSocket';
 import {ChatHeader} from './ChatHeader';
@@ -13,6 +13,7 @@ interface ChatWindowProps {
     chat: ChatItem | null;
     messages: Message[];
     onNewMessage: (message: Message) => void;
+    onNewNotification: (notification: ChatNotification) => void;
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({
@@ -20,6 +21,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                                           chat,
                                                           messages,
                                                           onNewMessage,
+                                                          onNewNotification,
                                                       }) => {
     const [currentMessage, setCurrentMessage] = useState('');
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
@@ -49,7 +51,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         chatId: chat?.id,
         onMessageReceived: handleMessageReceived,
         onTypingUpdate: handleTypingUpdate,
-        onConnectionChange: handleConnectionChange
+        onConnectionChange: handleConnectionChange,
+        onNotificationReceived: onNewNotification
     });
 
     useTypingIndicator({

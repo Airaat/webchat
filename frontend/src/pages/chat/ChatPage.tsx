@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Container, CssBaseline} from '@mui/material';
 import {useAuth} from '../../hooks/useAuth';
 import {useNavigate} from 'react-router-dom';
 import {ChatWindow} from '../../components/chat/chat-window/ChatWindow';
 import {ChatMenu} from '../../components/chat/chat-menu/ChatMenu';
-import type {Message, ChatItem, UserItem} from '../../types/chat';
+import type {ChatItem, ChatNotification, Message, UserItem} from '../../types/chat';
 import {chatService} from '../../services/chatService';
 
 export const ChatPage: React.FC = () => {
@@ -27,16 +27,11 @@ export const ChatPage: React.FC = () => {
         }
     }, [authContext.isLoading, authContext.user, navigate]);
 
-    const sortChats = (chats: ChatItem[]) => {
-        return chats.sort((a, b) => (new Date(b.lastMessageAt)).getTime() -  (new Date(a.lastMessageAt)).getTime());
-    }
-
     const loadChats = async () => {
         try {
             setLoading(true);
             const chatsData = await chatService.getChats();
-            const sortedChats = sortChats(chatsData.chats);
-            setChats(sortedChats);
+            setChats(chatsData.chats);
         } catch (err) {
             console.error('Failed to load chats:', err);
         } finally {
@@ -66,20 +61,22 @@ export const ChatPage: React.FC = () => {
 
     const handleNewMessage = (msg: Message) => {
         setMessages(prevMessages => [...prevMessages, msg]);
-
-        // Update the chat's lastMessageAt and re-sort
-        if (selectedChat) {
-            setChats(prevChats => {
-                const updatedChats = prevChats.map(chat =>
-                    chat.id === selectedChat.id
-                        ? {...chat, lastMessage: msg.content, lastMessageAt: msg.timestamp}
-                        : chat
-                );
-                // Re-sort by lastMessageAt
-                return sortChats(updatedChats);
-            });
-        }
     };
+
+    const handleChatNotification = useCallback((notification: ChatNotification) => {
+        const target = chats.find((c) => c.id === notification.chatId);
+        if (!target) {
+            // TODO: handle new chat
+            return;
+        }
+        const updatedChat = {
+            ...target,
+            lastMessage: notification.lastMessage,
+            lastMessageAt: notification.lastMessageAt
+        }
+        const filteredChats = chats.filter(chat => chat.id !== target.id);
+        setChats([updatedChat, ...filteredChats]);
+    }, [chats]);
 
     const currentUser = authContext.user;
     if (currentUser === null) return null;
@@ -106,6 +103,7 @@ export const ChatPage: React.FC = () => {
                 messages={messages}
                 chat={selectedChat}
                 onNewMessage={handleNewMessage}
+                onNewNotification={handleChatNotification}
             />
         </Container>
     );
