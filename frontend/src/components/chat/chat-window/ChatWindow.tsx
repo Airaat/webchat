@@ -52,10 +52,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         onConnectionChange: handleConnectionChange
     });
 
-    const {isTyping, setIsTyping} = useTypingIndicator({
+    useTypingIndicator({
         currentMessage,
         sendTyping,
-    })
+    });
 
     const handleSendMessage = () => {
         if (!currentMessage.trim()) return;
@@ -69,21 +69,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
         sendMessage(message);
         setCurrentMessage('');
-
-        // Stop typing indicator
-        if (isTyping) {
-            sendTyping(false);
-            setIsTyping(false);
-        }
     };
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
-        // Start typing if we have content and aren't already typing
-        if (!isTyping) {
-            sendTyping(true);
-            setIsTyping(true);
-        }
-
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             handleSendMessage();

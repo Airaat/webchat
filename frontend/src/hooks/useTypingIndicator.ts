@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef} from 'react';
 
 export interface UseTypingIndicatorProps {
     currentMessage: string;
@@ -7,35 +7,39 @@ export interface UseTypingIndicatorProps {
 }
 
 export function useTypingIndicator({currentMessage, sendTyping}: UseTypingIndicatorProps) {
-    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef<number | undefined>(undefined);
+    const hasSentTypingRef = useRef(false);
 
-    // Handle typing start/stop
     useEffect(() => {
-        if (!currentMessage.trim()) {
-            if (isTyping) {
-                sendTyping(false);
-                setIsTyping(false);
-            }
-            return;
-        }
-
-        if (!isTyping) {
+        if (currentMessage.trim() && !hasSentTypingRef.current) {
             sendTyping(true);
-            setIsTyping(true);
+            hasSentTypingRef.current = true;
         }
-    }, [currentMessage, isTyping, sendTyping]);
+    }, [currentMessage, sendTyping]);
 
-    // Auto-stop typing after inactivity
     useEffect(() => {
-        if (!isTyping) return;
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
 
-        const timeoutId = setTimeout(() => {
-            sendTyping(false);
-            setIsTyping(false);
-        }, 1000);
+        if (currentMessage.trim()) {
+            typingTimeoutRef.current = setTimeout(() => {
+                if (hasSentTypingRef.current) {
+                    sendTyping(false);
+                    hasSentTypingRef.current = false;
+                }
+            }, 1000);
+        } else {
+            if (hasSentTypingRef.current) {
+                sendTyping(false);
+                hasSentTypingRef.current = false;
+            }
+        }
 
-        return () => clearTimeout(timeoutId);
-    }, [currentMessage, isTyping, sendTyping]);
-
-    return {isTyping, setIsTyping};
+        return () => {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+        };
+    }, [currentMessage, sendTyping]);
 }
