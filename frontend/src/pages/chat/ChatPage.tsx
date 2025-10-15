@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {Container, CssBaseline} from '@mui/material';
 import {useAuth} from '../../hooks/useAuth';
 import {useNavigate} from 'react-router-dom';
-import {ChatWindow} from '../../components/chat/ChatWindow';
+import {ChatWindow} from '../../components/chat/chat-window/ChatWindow';
 import {ChatMenu} from '../../components/chat/chat-menu/ChatMenu';
 import type {Message, ChatItem, UserItem} from '../../types/chat';
 import {chatService} from '../../services/chatService';
@@ -72,7 +72,7 @@ export const ChatPage: React.FC = () => {
             setChats(prevChats => {
                 const updatedChats = prevChats.map(chat =>
                     chat.id === selectedChat.id
-                        ? {...chat, lastMessageAt: msg.timestamp}
+                        ? {...chat, lastMessage: msg.content, lastMessageAt: msg.timestamp}
                         : chat
                 );
                 // Re-sort by lastMessageAt
