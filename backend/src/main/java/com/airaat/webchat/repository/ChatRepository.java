@@ -1,7 +1,7 @@
 package com.airaat.webchat.repository;
 
-import com.airaat.webchat.domain.projection.ChatView;
 import com.airaat.webchat.domain.model.Chat;
+import com.airaat.webchat.domain.projection.ChatView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -128,4 +128,21 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
                             WHERE c.id = :chatId AND cgm.user_id = :userId))
             """, nativeQuery = true)
     boolean existsByIdAndUserId(Long chatId, Long userId);
+
+    @Query("""
+            SELECT c FROM Chat c
+            LEFT JOIN FETCH c.participants p
+            LEFT JOIN FETCH p.user
+            WHERE c.id = :chatId
+            """)
+    Chat getByIdWithParticipants(@Param("chatId") Long id);
+
+    @Query("""
+            SELECT c FROM Chat c
+            LEFT JOIN FETCH c.group g
+            LEFT JOIN FETCH g.members m
+            LEFT JOIN FETCH m.user
+            WHERE c.id = :chatId
+            """)
+    Chat getByIdWithMembers(@Param("chatId") Long id);
 }

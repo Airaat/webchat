@@ -1,12 +1,12 @@
 package com.airaat.webchat.service;
 
 import com.airaat.webchat.domain.dto.ChatGroupDTO;
-import com.airaat.webchat.domain.projection.ChatView;
 import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.ChatItem;
 import com.airaat.webchat.domain.enums.ChatType;
 import com.airaat.webchat.domain.enums.GroupRole;
 import com.airaat.webchat.domain.model.*;
+import com.airaat.webchat.domain.projection.ChatView;
 import com.airaat.webchat.exception.NoAccessException;
 import com.airaat.webchat.exception.ValidationError;
 import com.airaat.webchat.repository.ChatGroupMemberRepository;
@@ -15,6 +15,7 @@ import com.airaat.webchat.repository.ChatParticipantRepository;
 import com.airaat.webchat.repository.ChatRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +23,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,13 +123,15 @@ public class ChatService {
         return chat;
     }
 
-    public Set<User> getMembers(Chat chat) {
+    public Set<User> getMembers(@NotNull Chat target) {
         Set<User> chatMembers;
-        if (chat.getType() == ChatType.PRIVATE) {
+        if (target.getType() == ChatType.PRIVATE) {
+            Chat chat = repository.getByIdWithParticipants(target.getId());
             chatMembers = chat.getParticipants().stream()
                     .map(ChatParticipant::getUser)
                     .collect(Collectors.toSet());
         } else {
+            Chat chat = repository.getByIdWithMembers(target.getId());
             chatMembers = chat.getGroup().getMembers().stream()
                     .map(ChatGroupMember::getUser)
                     .collect(Collectors.toSet());

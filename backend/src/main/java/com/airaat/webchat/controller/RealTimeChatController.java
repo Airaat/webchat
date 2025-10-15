@@ -54,6 +54,8 @@ public class RealTimeChatController {
             sendChatUpdateToParticipants(chat, message);
         } catch (MessagingException e) {
             log.error("Error sending message from [{}] to chat {}: {}", principal.getName(), chatId, e.getMessage());
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 
@@ -67,7 +69,7 @@ public class RealTimeChatController {
 
             messagingTemplate.convertAndSendToUser(
                     user.getUsername(),
-                    "/queue/chat-updates",
+                    "/queue/notifications",
                     chatUpdate
             );
         }
