@@ -66,12 +66,9 @@ public class ChatService {
     @Transactional
     public Chat createPrivate(List<User> users) {
         // TODO: we need to separate validation logic from services
-        if (users.isEmpty()) {
-            throw new ValidationError("User list is empty");
-        }
-
         if (users.size() != 2) {
-            throw new ValidationError("Incorrect number of users for private chat");
+            String msg = users.isEmpty() ? "User list is empty" : "Incorrect number of users for private chat";
+            throw new ValidationError(msg);
         }
 
         if (participantRepository.existsPrivateChatBetweenUsers(users.get(0).getId(), users.get(1).getId())) {
@@ -108,7 +105,7 @@ public class ChatService {
                 .build();
         groupRepository.save(group);
 
-        List.copyOf(uniqueUsers).forEach(user -> {
+        uniqueUsers.forEach(user -> {
             ChatGroupMember member = new ChatGroupMember();
             member.setGroup(group);
             member.setUser(user);

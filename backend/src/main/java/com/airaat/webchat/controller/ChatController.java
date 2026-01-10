@@ -51,7 +51,7 @@ class ChatController {
     @PostMapping
     public ResponseEntity<ChatItem> create(@RequestBody @Valid CreateChatRequest request) {
         User current = userService.current();
-        ChatItem chatItem = null;
+        ChatItem chatItem;
 
         if (request.getChatType() == ChatType.PRIVATE) {
             User target = userService.getById(request.getUserIds().getFirst());
