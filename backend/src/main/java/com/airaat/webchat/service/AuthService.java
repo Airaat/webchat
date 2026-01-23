@@ -15,17 +15,16 @@ public class AuthService {
     private final AuthenticationManager authManager;
 
     public User verify(LoginRequest dto) {
-        Authentication authentication = authManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(
-                        dto.getUsername(),
-                        dto.getPassword()
-                )
-        );
-
-        if (!authentication.isAuthenticated()) {
+        try {
+            Authentication authentication = authManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(
+                            dto.getUsername(),
+                            dto.getPassword()
+                    )
+            );
+            return (User) authentication.getPrincipal();
+        } catch (BadCredentialsException ex) {
             throw new BadCredentialsException("Incorrect username or password");
         }
-
-        return (User) authentication.getPrincipal();
     }
 }
