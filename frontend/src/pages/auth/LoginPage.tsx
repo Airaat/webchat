@@ -6,16 +6,16 @@ import {useAuth} from '../../hooks/useAuth';
 import {useNavigate} from 'react-router-dom';
 
 export const LoginPage: React.FC = () => {
-    const {username} = useAuth();
+    const {user} = useAuth();
     const navigate = useNavigate();
 
     // Redirect if already logged in
     React.useEffect(() => {
-        if (username) {
+        if (user) {
             // TODO: implement in the future
             navigate('/chat');
         }
-    }, [username, navigate]);
+    }, [user, navigate]);
 
     const handleLoginSuccess = () => {
         navigate('/chat');

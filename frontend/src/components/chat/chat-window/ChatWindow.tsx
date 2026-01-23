@@ -32,9 +32,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }, [onNewMessage]);
 
     const handleTypingUpdate = useCallback((username: string, typing: boolean) => {
+        if (username === user.username) return;
+
         setTypingUsers(prev => {
             const updated = new Set(prev);
-            if (typing && username !== user.username) {
+            if (typing) {
                 updated.add(username);
             } else {
                 updated.delete(username);
@@ -61,7 +63,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     const handleSendMessage = () => {
-        if (!currentMessage.trim()) return;
+        if (!currentMessage.trim() || !chat) return;
+
         const message: MessageRequest = {
             type: 'TEXT',
             content: currentMessage.trim(),
