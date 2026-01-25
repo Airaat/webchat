@@ -41,9 +41,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         }
     };
 
-    const logout = () => {
-        authService.logout();
-        setUser(null);
+    const logout = async () => {
+        setIsLoading(true);
+        try {
+            await authService.logout();
+            setUser(null);
+        } catch (err) {
+            console.error('Logout error:', err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

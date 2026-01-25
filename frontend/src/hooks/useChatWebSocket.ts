@@ -1,6 +1,12 @@
 import {useEffect, useRef, useCallback} from 'react';
 import {webSocketService} from '../services/websocketService';
-import type {ChatNotification, Message, MessageRequest, TypingNotification} from '../types/chat';
+import type {
+    ChatNotification,
+    Message,
+    MessageRequest,
+    TypingNotification,
+    TypingRequest
+} from '../types/chat';
 
 interface UseChatWebSocketProps {
     chatId?: string;
@@ -25,13 +31,13 @@ export const useChatWebSocket = ({
             return;
         }
 
-        webSocketService.send(`/app/chat/${chatId}/send`, message);
+        webSocketService.send<MessageRequest>(`/app/chat/${chatId}/send`, message);
     }, [chatId]);
 
     const sendTyping = useCallback((typing: boolean) => {
         if (!chatId) return;
 
-        webSocketService.send(`/app/chat/${chatId}/typing`, {typing});
+        webSocketService.send<TypingRequest>(`/app/chat/${chatId}/typing`, {typing});
     }, [chatId]);
 
     const subscribeToChat = useCallback(() => {

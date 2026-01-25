@@ -1,6 +1,7 @@
-import {Client, type IMessage} from '@stomp/stompjs';
+import {Client, type IMessage, type StompSubscription} from '@stomp/stompjs';
 import {authService} from './authService';
 import {WS_BASE_URL} from "../const.ts";
+import {jwtService} from "./jwtService.ts";
 
 interface WebSocketConfig {
     brokerURL?: string;
@@ -12,13 +13,12 @@ interface WebSocketConfig {
 class WebSocketService {
     private client: Client | null = null;
     private isConnected = false;
-    private subscriptions: Map<string, any> = new Map();
-    private connectionCallbacks: Array<(connected: boolean) => void> = [];
-
+    private subscriptions: Map<string, StompSubscription> = new Map();
+    private connectionCallbacks: Set<(connected: boolean) => void> = new Set();
     private config: WebSocketConfig = {};
+    private tokenRefreshTimer: number | null = null;
 
     constructor(config: WebSocketConfig = {}) {
-        this.config = config;
         this.config = {
             brokerURL: WS_BASE_URL,
             reconnectDelay: 5000,
@@ -28,68 +28,121 @@ class WebSocketService {
         };
     }
 
-    connect(): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (this.isConnected) {
-                resolve(true);
-                return;
-            }
+    async connect(): Promise<void> {
+        if (this.isConnected && this.client) {
+            return;
+        }
 
-            const token = authService.getToken();
-            if (!token) {
-                reject(new Error('No authentication token available'));
-                return;
-            }
+        const token = authService.getToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
 
-            this.client = new Client({
-                brokerURL: this.config.brokerURL,
-                reconnectDelay: this.config.reconnectDelay,
-                heartbeatIncoming: this.config.heartbeatIncoming,
-                heartbeatOutgoing: this.config.heartbeatOutgoing,
-                connectHeaders: {
-                    Authorization: `Bearer ${token}`
-                },
-                // TODO: Remove debug logs in production
-                // debug: (str) => {
-                //     console.log('STOMP:', str);
-                // },
-                onConnect: () => {
-                    this.isConnected = true;
-                    console.log('WebSocket connected');
-                    this.connectionCallbacks.forEach(callback => callback(true));
-                    resolve(true);
-                },
-                onStompError: (frame) => {
-                    console.error('WebSocket STOMP error:', frame);
-                    this.isConnected = false;
-                    reject(new Error(frame.headers?.message || 'WebSocket connection failed'));
-                },
-                onWebSocketError: (event) => {
-                    console.error('WebSocket error:', event);
-                    this.isConnected = false;
-                    reject(new Error('WebSocket connection error'));
-                },
-                onDisconnect: () => {
-                    this.isConnected = false;
-                    console.log('WebSocket disconnected');
-                    this.connectionCallbacks.forEach(callback => callback(false));
-                },
-            });
+        if (this.client) {
+            await this.client.deactivate();
+        }
 
-            this.client.activate();
+        this.client = new Client({
+            ...this.config,
+            connectHeaders: {
+                Authorization: `Bearer ${token}`
+            },
+            onConnect: () => {
+                this.isConnected = true;
+                console.log('WebSocket connected');
+                this.scheduleTokenRefresh();
+                this.notifyConnectionChange(true);
+            },
+            onStompError: async (frame) => {
+                console.error('WebSocket STOMP error:', frame);
+                const errorMessage = frame.headers?.message || frame.body || '';
+                const isAuthError =
+                    errorMessage.includes('Unauthorized') ||
+                    errorMessage.includes('Authentication') ||
+                    errorMessage.includes('401') ||
+                    errorMessage.includes('403');
+
+                if (isAuthError) {
+                    await this.handleTokenExpired();
+                }
+            },
+            onWebSocketError: (event) => {
+                console.error('WebSocket error:', event);
+            },
+            onDisconnect: () => {
+                this.isConnected = false;
+                console.log('WebSocket disconnected');
+                this.clearTokenRefreshTimer();
+                this.notifyConnectionChange(false);
+            },
         });
+
+        this.client.activate();
+    }
+
+    private scheduleTokenRefresh() {
+        this.clearTokenRefreshTimer();
+
+        const token = authService.getToken();
+        if (!token) return;
+
+        const expirationDate = jwtService.getTokenExpiration(token);
+        if (!expirationDate) return;
+
+        const refreshTime = expirationDate.getTime() - Date.now() - (5 * 60 * 1000);
+        if (refreshTime > 0) {
+            this.tokenRefreshTimer = window.setTimeout(async () => {
+                await this.handleTokenExpired();
+            }, refreshTime);
+        }
+    }
+
+    private async handleTokenExpired() {
+        try {
+            console.log('Refreshing WebSocket token...');
+            await authService.refresh();
+            await this.reconnect();
+            console.log('WebSocket token refreshed successfully');
+        } catch (err) {
+            console.error('Failed to refresh token:', err);
+            this.disconnect();
+            await authService.logout();
+            alert('Session expired. Please log in again.');
+            window.location.href = '/login';
+        }
+    }
+
+    private async reconnect() {
+        if (this.client) {
+            await this.client.deactivate();
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await this.connect();
+    }
+
+    private clearTokenRefreshTimer() {
+        if (this.tokenRefreshTimer) {
+            clearTimeout(this.tokenRefreshTimer);
+            this.tokenRefreshTimer = null;
+        }
+    }
+
+    private notifyConnectionChange(connected: boolean) {
+        this.connectionCallbacks.forEach(callback => callback(connected));
     }
 
     disconnect() {
+        this.clearTokenRefreshTimer();
+
         if (this.client) {
-            this.subscriptions.forEach((subscription, topic) => {
-                subscription.unsubscribe();
-            });
+            this.subscriptions.forEach(sub => sub.unsubscribe());
             this.subscriptions.clear();
             this.client.deactivate();
             this.client = null;
-            this.isConnected = false;
         }
+
+        this.isConnected = false;
     }
 
     subscribe<T>(topic: string, callback: (message: T) => void): string {
@@ -106,7 +159,7 @@ class WebSocketService {
             }
         });
 
-        const subscriptionId = `sub-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const subscriptionId = `${topic}-${Date.now()}`;
         this.subscriptions.set(subscriptionId, subscription);
         return subscriptionId;
     }
@@ -119,7 +172,7 @@ class WebSocketService {
         }
     }
 
-    send(destination: string, body: any) {
+    send<T>(destination: string, body: T) {
         if (!this.client || !this.isConnected) {
             throw new Error('WebSocket not connected');
         }
@@ -131,7 +184,8 @@ class WebSocketService {
     }
 
     onConnectionChange(callback: (connected: boolean) => void) {
-        this.connectionCallbacks.push(callback);
+        this.connectionCallbacks.add(callback);
+        return () => this.connectionCallbacks.delete(callback);
     }
 
     getIsConnected(): boolean {

@@ -19,6 +19,10 @@ export interface MessageRequest {
     timestamp: Date;
 }
 
+export interface TypingRequest {
+    typing: boolean;
+}
+
 export interface TypingNotification {
     chatId: number;
     username: string;
