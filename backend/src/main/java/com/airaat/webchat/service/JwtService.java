@@ -19,48 +19,63 @@ import java.util.Date;
 public class JwtService {
     private final JwtProperties properties;
 
-    public String generateToken(UserPayload payload) {
+    public String generateAccessToken(UserPayload userPayload) {
+        return buildToken(userPayload, properties.getAccessSecret(), properties.getAccessExpirationMin());
+    }
+
+    public String generateRefreshToken(UserPayload userPayload) {
+        return buildToken(userPayload, properties.getRefreshSecret(), properties.getRefreshExpirationMin());
+    }
+
+    public boolean validateAccessToken(String token) {
+        return token != null && isTokenValid(token, properties.getAccessSecret());
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return token != null && isTokenValid(token, properties.getRefreshSecret());
+    }
+
+    public Long extractUserId(String refreshToken) {
+        Claims claims = parseToken(refreshToken, properties.getRefreshSecret());
+        return Long.parseLong(claims.getSubject());
+    }
+
+    public String extractUsername(String accessToken) {
+        Claims claims = parseToken(accessToken, properties.getAccessSecret());
+        return claims.get("username", String.class);
+    }
+
+    private String buildToken(UserPayload payload, String secret, Integer expirationMin) {
         return Jwts.builder()
                 .subject(payload.getUserId())
                 .claim("username", payload.getUsername())
                 .claim("role", payload.getRole())
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plus(properties.getExpirationMs(), ChronoUnit.MILLIS)))
-                .signWith(getKey())
+                .expiration(Date.from(Instant.now().plus(expirationMin, ChronoUnit.MINUTES)))
+                .signWith(getKey(secret))
                 .compact();
     }
 
-    public Long extractUserId(String token) {
-        Claims claims = parseToken(token);
-        return Long.parseLong(claims.getSubject());
+    private Claims parseToken(String token, String secret) {
+        return Jwts.parser()
+                .verifyWith(getKey(secret))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    public String extractUsername(String token) {
-        Claims claims = parseToken(token);
-        return claims.get("username", String.class);
-    }
-
-    public boolean isValidToken(String token) {
-        return token != null && !isTokenExpired(token);
-    }
-
-    public boolean isTokenExpired(String token) {
-        Claims claims = parseToken(token);
+    private boolean isTokenValid(String token, String secret) {
+        Claims claims = parseToken(token, secret);
         Date expiration = claims.getExpiration();
-        return expiration.before(new Date());
+        return !expiration.before(new Date());
     }
 
-    private SecretKey getKey() {
-        String key = properties.getSecret();
+    private SecretKey getKey(String key) {
         byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private Claims parseToken(String token) {
-        return Jwts.parser()
-                .verifyWith(getKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public int getRefreshTokenExpirySec() {
+        return properties.getRefreshExpirationMin() * 60;
     }
 }
