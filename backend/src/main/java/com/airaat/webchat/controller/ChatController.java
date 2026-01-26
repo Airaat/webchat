@@ -3,9 +3,7 @@ package com.airaat.webchat.controller;
 import com.airaat.webchat.domain.dto.ChatGroupDTO;
 import com.airaat.webchat.domain.dto.request.CreateChatRequest;
 import com.airaat.webchat.domain.dto.request.MuteChatRequest;
-import com.airaat.webchat.domain.dto.response.ChatItem;
-import com.airaat.webchat.domain.dto.response.ChatListResponse;
-import com.airaat.webchat.domain.dto.response.PaginatedMessages;
+import com.airaat.webchat.domain.dto.response.*;
 import com.airaat.webchat.domain.enums.ChatType;
 import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.Message;
@@ -24,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
@@ -39,6 +40,22 @@ class ChatController {
         User current = userService.current();
         Page<ChatItem> chats = chatService.getAllForUser(current, pageNumber);
         return ResponseEntity.ok(ChatListResponse.from(chats, current));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ChatSearchResponse> search(@RequestParam String q, Principal principal) {
+        User current = userService.getByUsername(principal.getName());
+
+        List<ChatItem> chats = chatService.searchForUser(current, q);
+        Set<String> existedChatTitles = chats.stream().map(ChatItem::getTitle).collect(Collectors.toSet());
+
+        List<UserResponse> users = userService.findByUsername(q).stream()
+                .filter(user -> !Objects.equals(user.getUsername(), current.getUsername()))
+                .filter(user -> !existedChatTitles.contains(user.getUsername()))
+                .map(UserResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(new ChatSearchResponse(chats,users));
     }
 
     @GetMapping("/{id}")

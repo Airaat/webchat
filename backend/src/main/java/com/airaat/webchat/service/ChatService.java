@@ -63,6 +63,11 @@ public class ChatService {
         return result.map(ChatItem::from);
     }
 
+    public List<ChatItem> searchForUser(User user, String searchTerm) {
+        List<ChatView> result = repository.searchChatsForUser(user.getId(), searchTerm);
+        return result.stream().map(ChatItem::from).toList();
+    }
+
     @Transactional
     public Chat createPrivate(List<User> users) {
         // TODO: we need to separate validation logic from services
