@@ -4,6 +4,7 @@ import {TextField} from "../ui/Form/TextField.tsx";
 import type {SignupRequest} from "../../types/auth.ts";
 import {Alert, Box, Button, Link, Typography} from "@mui/material";
 import {authService} from "../../services/authService.ts";
+import {PasswordField} from "../ui/Form/PasswordField.tsx";
 
 interface SignUpFormProps {
     onSuccess?: () => void;
@@ -126,11 +127,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({onSuccess, onLoginClick})
                     onChange={handleInputChange}
                 />
 
-                <TextField
+                <PasswordField
                     label="Password"
                     name="password"
-                    type="password"
-                    autoComplete="current-password"
                     required
                     error={!!errors.password}
                     helperText={errors.password}
@@ -138,11 +137,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({onSuccess, onLoginClick})
                     onChange={handleInputChange}
                 />
 
-                <TextField
+                <PasswordField
                     label="Confirm password"
                     name="confirmPassword"
-                    type="password"
-                    autoComplete="current-password"
                     required
                     error={!!errors.confirmPassword}
                     helperText={errors.confirmPassword}
@@ -167,7 +164,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({onSuccess, onLoginClick})
                     <Link
                         component="button"
                         type="button"
-                        variant="body2"
                         onClick={onLoginClick}
                         sx={{border: 'none', background: 'none', cursor: 'pointer'}}
                     >

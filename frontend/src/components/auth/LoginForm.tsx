@@ -2,8 +2,6 @@ import React, {useState} from 'react';
 import {
     Box,
     Button,
-    Checkbox,
-    FormControlLabel,
     Typography,
     Link,
     Alert,
@@ -12,6 +10,7 @@ import {Card} from '../ui/Layout/Card';
 import {TextField} from '../ui/Form/TextField';
 import {useAuth} from '../../hooks/useAuth';
 import type {LoginRequest} from '../../types/auth';
+import {PasswordField} from "../ui/Form/PasswordField.tsx";
 
 interface LoginFormProps {
     onSuccess?: () => void;
@@ -113,21 +112,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({onSuccess, onSignUpClick}) 
                     onChange={handleInputChange}
                 />
 
-                <TextField
+                <PasswordField
                     label="Password"
                     name="password"
-                    type="password"
-                    autoComplete="current-password"
                     required
                     error={!!errors.password}
                     helperText={errors.password}
                     value={formData.password}
                     onChange={handleInputChange}
-                />
-
-                <FormControlLabel
-                    control={<Checkbox value="remember" color="primary"/>}
-                    label="Remember me"
                 />
 
                 <Button
@@ -147,7 +139,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({onSuccess, onSignUpClick}) 
                     <Link
                         component="button"
                         type="button"
-                        variant="body2"
                         onClick={onSignUpClick}
                         sx={{border: 'none', background: 'none', cursor: 'pointer'}}
                     >
