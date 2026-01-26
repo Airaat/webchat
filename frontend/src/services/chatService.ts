@@ -20,11 +20,10 @@ class ChatService {
     }
 
     async createPrivateChat(userId: number): Promise<ChatItem> {
-        return apiClient.post<ChatItem>('/chats', JSON.stringify({
-                chatType: 'PRIVATE',
-                userIds: [userId]
-            })
-        );
+        return apiClient.post<ChatItem>('/chats', {
+            chatType: 'PRIVATE',
+            userIds: [userId]
+        });
     }
 }
 
