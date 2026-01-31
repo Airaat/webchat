@@ -1,15 +1,16 @@
 import React from 'react';
 import {Box, Tooltip, Typography} from '@mui/material';
 import type {ChatItem} from '../../../types/chat';
-import {useAuth} from "../../../hooks/useAuth.ts";
+import {useAuth} from "../../../hooks/useAuth";
 
 export interface ChatHeaderProps {
     chat: ChatItem | null;
-    connectionStatus: 'connected' | 'disconnected' | 'connecting';
+    isConnected: boolean;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({chat, connectionStatus}) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({chat, isConnected}) => {
     const authContext = useAuth();
+    const connectionStatus = isConnected ? 'connected' : 'disconnected';
 
     return (
         <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -19,7 +20,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({chat, connectionStatus}) 
             <Tooltip title="Click to log out">
                 <Typography
                     variant="caption"
-                    color={connectionStatus === 'connected' ? 'success.main' : 'error.main'}
+                    color={isConnected ? 'success.main' : 'error.main'}
                     onClick={authContext.logout}
                     sx={{cursor: 'pointer'}}
                 >

@@ -25,11 +25,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                                       }) => {
     const [currentMessage, setCurrentMessage] = useState('');
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
-    const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
-
-    const handleMessageReceived = useCallback((newMessage: Message) => {
-        onNewMessage(newMessage);
-    }, [onNewMessage]);
 
     const handleTypingUpdate = useCallback((username: string, typing: boolean) => {
         if (username === user.username) return;
@@ -45,15 +40,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         });
     }, [user.username]);
 
-    const handleConnectionChange = useCallback((connected: boolean) => {
-        setConnectionStatus(connected ? 'connected' : 'disconnected');
-    }, []);
-
     const {sendMessage, sendTyping, isConnected} = useChatWebSocket({
         chatId: chat?.id,
-        onMessageReceived: handleMessageReceived,
+        onMessageReceived: onNewMessage,
         onTypingUpdate: handleTypingUpdate,
-        onConnectionChange: handleConnectionChange,
         onNotificationReceived: onNewNotification
     });
 
@@ -104,7 +94,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         >
             <ChatHeader
                 chat={chat}
-                connectionStatus={connectionStatus}
+                isConnected={isConnected}
             />
 
             <MessageList
