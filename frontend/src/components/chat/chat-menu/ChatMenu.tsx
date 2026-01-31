@@ -25,23 +25,20 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
     const {
         searchResults,
         searchTerm,
-        setSearchTerm,
         isSearching,
-        resetSearch
+        resetSearch,
+        setSearchTerm,
     } = useUserSearch();
 
     const handleUserSelect = async (user: UserItem) => {
-        try {
-            const newChat = await onChatCreate(user);
-            onChatSelect(newChat);
-            resetSearch();
-        } catch (error) {
-            // Error is already handled in the hook
-        }
+        const newChat = await onChatCreate(user);
+        onChatSelect(newChat);
+        resetSearch();
     };
 
     const handleChatSelect = (chat: ChatItem) => {
         onChatSelect(chat);
+        resetSearch();
     };
 
     const isSearchActive = isSearching || searchTerm.trim() !== '';
@@ -73,6 +70,7 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
                 <SearchResults
                     searchResults={searchResults}
                     isSearching={isSearching}
+                    onChatSelect={handleChatSelect}
                     onUserSelect={handleUserSelect}
                 />
             )}

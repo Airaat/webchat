@@ -47,6 +47,11 @@ export interface ChatListData {
     totalPages: number;
 }
 
+export interface ChatSearchData {
+    chats: ChatItem[];
+    users: UserItem[];
+}
+
 export interface ChatItem {
     id: string;
     title: string;

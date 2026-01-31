@@ -1,5 +1,5 @@
 import {apiClient} from "../core/apiClient";
-import type {ChatItem, ChatListData, PaginatedMessages, UserItem} from "../types/chat";
+import type {ChatItem, ChatListData, PaginatedMessages, ChatSearchData} from "../types/chat";
 
 class ChatService {
     async getChats(): Promise<ChatListData> {
@@ -15,8 +15,8 @@ class ChatService {
         return apiClient.get<PaginatedMessages>(`/chats/${chatId}/messages?${params}`);
     }
 
-    async searchUsers(username: string): Promise<UserItem[]> {
-        return apiClient.get<UserItem[]>(`/users/find?username=${encodeURIComponent(username)}`);
+    async searchChatsAndUsers(query: string): Promise<ChatSearchData> {
+        return apiClient.get<ChatSearchData>(`/chats/search?q=${encodeURIComponent(query)}`);
     }
 
     async createPrivateChat(userId: number): Promise<ChatItem> {
