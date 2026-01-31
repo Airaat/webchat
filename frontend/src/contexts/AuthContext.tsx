@@ -2,7 +2,7 @@ import React, {createContext, type ReactNode, useEffect, useState} from 'react';
 import type {LoginRequest, User} from '../types/auth';
 import {authService} from '../services/authService';
 
-interface AuthContextType {
+export interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     login: (credentials: LoginRequest) => Promise<void>;
