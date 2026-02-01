@@ -51,7 +51,6 @@ public class RealTimeChatController {
         try {
             Message message = messageService.save(chat, request, author);
             log.info("Sending message from [{}] to chat {}", request.getAuthorUsername(), chatId);
-            messagingTemplate.convertAndSend("/topic/chat/" + chatId, MessageResponse.of(message));
             sendChatUpdateToParticipants(chat, message);
         } catch (MessagingException e) {
             log.error("Error sending message from [{}] to chat {}: {}", principal.getName(), chatId, e.getMessage());
@@ -69,11 +68,9 @@ public class RealTimeChatController {
                     .lastMessageAt(message.getCreatedAt())
                     .build();
 
-            messagingTemplate.convertAndSendToUser(
-                    user.getUsername(),
-                    "/queue/notifications",
-                    chatUpdate
-            );
+            final String username = user.getUsername();
+            messagingTemplate.convertAndSendToUser(username, "/queue/messages", MessageResponse.of(message));
+            messagingTemplate.convertAndSendToUser(username, "/queue/notifications", chatUpdate);
         }
     }
 

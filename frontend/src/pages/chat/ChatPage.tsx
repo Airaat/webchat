@@ -14,8 +14,6 @@ export const ChatPage: React.FC = () => {
         selectedChat,
         createChat,
         selectChat,
-        addMessage,
-        handleChatNotification
     } = useChatPage(authContext);
 
     return (
@@ -40,8 +38,6 @@ export const ChatPage: React.FC = () => {
                     user={authContext.user}
                     messages={messages}
                     chat={selectedChat}
-                    onNewMessage={addMessage}
-                    onNewNotification={handleChatNotification}
                 />
             </Container>
         )

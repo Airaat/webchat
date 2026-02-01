@@ -1,8 +1,9 @@
-import {useState, useEffect} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import type {ChatItem, ChatNotification, Message, UserItem} from '../types/chat';
 import {chatService} from '../services/chatService';
 import type {AuthContextType} from "../contexts/AuthContext.tsx";
 import {useNavigate} from "react-router-dom";
+import {useNotifications} from "./useNotifications";
 
 export const useChatPage = (authContext: AuthContextType) => {
     const navigate = useNavigate();
@@ -52,11 +53,11 @@ export const useChatPage = (authContext: AuthContextType) => {
         setMessages(chatMessages.content);
     };
 
-    const addMessage = (msg: Message) => {
+    const addMessage = useCallback((msg: Message) => {
         setMessages(prevMessages => [...prevMessages, msg]);
-    };
+    }, []);
 
-    const handleChatNotification = (notification: ChatNotification) => {
+    const handleChatNotification = useCallback((notification: ChatNotification) => {
         setChats(prevChats => {
             const target = prevChats.find((c) => Number.parseInt(c.id) === notification.chatId);
             if (!target) return prevChats;
@@ -66,19 +67,23 @@ export const useChatPage = (authContext: AuthContextType) => {
                 lastMessage: notification.lastMessage,
                 lastMessageAt: notification.lastMessageAt,
             };
-            const filteredChats = prevChats.filter(chat => chat.id !== target.id);
-            return [updatedChat, ...filteredChats];
+            return [updatedChat, ...prevChats.filter(chat => chat.id !== target.id)];
         });
-    };
+    }, []);
+
+    useNotifications({
+        onMessageReceived: addMessage,
+        onNotificationReceived: handleChatNotification
+    });
+
+    const displayedMessages = selectedChat ? messages : [];
 
     return {
         chats,
         loading,
-        messages,
+        messages: displayedMessages,
         selectedChat,
         createChat,
         selectChat,
-        addMessage,
-        handleChatNotification,
     };
 };
