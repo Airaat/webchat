@@ -1,7 +1,7 @@
 import {Client, type IMessage, type StompSubscription} from '@stomp/stompjs';
-import {authService} from './authService';
-import {WS_BASE_URL} from "../const.ts";
-import {jwtService} from "./jwtService.ts";
+import {authService} from '../services/authService';
+import {jwtService} from "../services/jwtService";
+import {WS_BASE_URL} from "../const";
 
 interface WebSocketConfig {
     brokerURL?: string;
@@ -10,7 +10,7 @@ interface WebSocketConfig {
     heartbeatOutgoing?: number;
 }
 
-class WebSocketService {
+class WebSocketClient {
     private client: Client | null = null;
     private isConnected = false;
     private subscriptions: Map<string, StompSubscription> = new Map();
@@ -193,4 +193,4 @@ class WebSocketService {
     }
 }
 
-export const webSocketService = new WebSocketService();
+export const webSocketClient = new WebSocketClient();

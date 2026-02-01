@@ -1,6 +1,6 @@
 import {useEffect, useRef} from "react";
 import type {Message, ChatNotification} from "../types/chat";
-import {webSocketService} from "../services/websocketService";
+import {webSocketClient} from "../core/webSocketClient";
 
 interface UseNotificationsProps {
     onMessageReceived: (message: Message) => void;
@@ -28,7 +28,7 @@ export const useNotifications = ({
         const subscribeToMessages = () => {
             if (subscriptions.current.has('messages')) return;
 
-            const messageSub = webSocketService.subscribe<Message>(
+            const messageSub = webSocketClient.subscribe<Message>(
                 '/user/queue/messages',
                 callbackRef.current.onMessageReceived
             );
@@ -38,7 +38,7 @@ export const useNotifications = ({
         const subscribeToNotifications = () => {
             // TODO: handle chatCreated, chatDeleted, chatUpdated, newMessage, messageDeleted
             if (subscriptions.current.has('notifications')) return;
-            const notificationSub = webSocketService.subscribe<ChatNotification>(
+            const notificationSub = webSocketClient.subscribe<ChatNotification>(
                 '/user/queue/notifications',
                 callbackRef.current.onNotificationReceived
             );
@@ -48,7 +48,7 @@ export const useNotifications = ({
         const subscribeToErrors = () => {
             if (subscriptions.current.has('errors')) return;
 
-            const errorSub = webSocketService.subscribe(
+            const errorSub = webSocketClient.subscribe(
                 '/user/queue/errors',
                 (error) => console.error('WebSocket error:', error)
             );
@@ -64,13 +64,13 @@ export const useNotifications = ({
         };
 
         // Initial connection
-        webSocketService.connect()
+        webSocketClient.connect()
             .then(() => handleConnectionChange(true))
             .catch(error => console.error('Failed to connect WebSocket:', error));
-        webSocketService.onConnectionChange(handleConnectionChange);
+        webSocketClient.onConnectionChange(handleConnectionChange);
 
         return () => {
-            subscriptions.current.forEach(sub => webSocketService.unsubscribe(sub));
+            subscriptions.current.forEach(sub => webSocketClient.unsubscribe(sub));
             subscriptions.current.clear();
         };
     }, []);
