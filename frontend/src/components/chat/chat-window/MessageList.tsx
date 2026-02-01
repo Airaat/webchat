@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {List, ListItem, ListItemText, Typography} from '@mui/material';
 import type {Message} from '../../../types/chat';
+import {formatMessageTimestamp} from "../../../utils/dateUtils";
 
 export interface MessageListProps {
     messages: Message[];
@@ -41,7 +42,7 @@ export const MessageList: React.FC<MessageListProps> = ({messages, indicatorText
                 >
                     <ListItemText
                         primary={`${message.authorUsername}: ${message.content}`}
-                        secondary={new Date(message.timestamp).toLocaleTimeString()}
+                        secondary={formatMessageTimestamp(message.timestamp.toString())}
                         sx={{
                             wordWrap: 'break-word',
                             overflowWrap: 'break-word',

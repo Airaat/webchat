@@ -10,8 +10,15 @@ export const formatChatTime = (dateString: string): string => {
     }
 };
 
-export const isToday = (dateString: string): boolean => {
+export const formatMessageTimestamp = (dateString: string): string => {
     const date = new Date(dateString);
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+    const formatter = Intl.DateTimeFormat('en-US', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+
+    return formatter.format(date);
 };
