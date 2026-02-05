@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -58,6 +59,10 @@ public class UserService implements UserDetailsService {
 
     public List<User> findByUsername(String username) {
         return repository.findByUsernameContainingIgnoreCase(username);
+    }
+
+    public Set<User> findRelatedUsers(User user) {
+        return repository.findRelatedUsers(user.getId());
     }
 
     @Transactional
