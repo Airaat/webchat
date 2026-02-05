@@ -12,7 +12,6 @@ interface WebSocketConfig {
 
 class WebSocketClient {
     private client: Client | null = null;
-    private isConnected = false;
     private subscriptions: Map<string, StompSubscription> = new Map();
     private connectionCallbacks: Set<(connected: boolean) => void> = new Set();
     private config: WebSocketConfig = {};
@@ -29,7 +28,7 @@ class WebSocketClient {
     }
 
     async connect(): Promise<void> {
-        if (this.isConnected && this.client) {
+        if (this.client?.connected) {
             return;
         }
 
@@ -48,7 +47,6 @@ class WebSocketClient {
                 Authorization: `Bearer ${token}`
             },
             onConnect: () => {
-                this.isConnected = true;
                 console.log('WebSocket connected');
                 this.scheduleTokenRefresh();
                 this.notifyConnectionChange(true);
@@ -70,7 +68,6 @@ class WebSocketClient {
                 console.error('WebSocket error:', event);
             },
             onDisconnect: () => {
-                this.isConnected = false;
                 console.log('WebSocket disconnected');
                 this.clearTokenRefreshTimer();
                 this.notifyConnectionChange(false);
@@ -141,12 +138,10 @@ class WebSocketClient {
             this.client.deactivate();
             this.client = null;
         }
-
-        this.isConnected = false;
     }
 
     subscribe<T>(topic: string, callback: (message: T) => void): string {
-        if (!this.client || !this.isConnected) {
+        if (!this.client || !this.client.connected) {
             throw new Error('WebSocket not connected');
         }
 
@@ -173,7 +168,7 @@ class WebSocketClient {
     }
 
     send<T>(destination: string, body: T) {
-        if (!this.client || !this.isConnected) {
+        if (!this.client || !this.client.connected) {
             throw new Error('WebSocket not connected');
         }
 
@@ -188,8 +183,8 @@ class WebSocketClient {
         return () => this.connectionCallbacks.delete(callback);
     }
 
-    getIsConnected(): boolean {
-        return this.isConnected;
+    get isConnected(): boolean {
+        return this.client?.connected || false;
     }
 }
 

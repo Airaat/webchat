@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {webSocketClient} from '../core/webSocketClient';
 import type {MessageRequest, TypingNotification, TypingRequest} from '../types/chat';
 
@@ -11,6 +11,7 @@ export const useChatWebSocket = ({
                                      chatId,
                                      onTypingUpdate,
                                  }: UseChatWebSocketProps) => {
+    const [connected, setConnected] = useState(false);
     const chatIdRef = useRef(chatId)
     const onTypingUpdateRef = useRef(onTypingUpdate);
 
@@ -18,6 +19,13 @@ export const useChatWebSocket = ({
         chatIdRef.current = chatId;
         onTypingUpdateRef.current = onTypingUpdate;
     });
+
+    useEffect(() => {
+        setConnected(webSocketClient.isConnected);
+        return () => {
+            webSocketClient.onConnectionChange(conn => setConnected(conn));
+        }
+    }, [setConnected]);
 
     useEffect(() => {
         const currentChatId = chatIdRef.current;
@@ -46,6 +54,6 @@ export const useChatWebSocket = ({
     return {
         sendMessage,
         sendTyping,
-        isConnected: webSocketClient.getIsConnected()
+        isConnected: connected
     };
 };
