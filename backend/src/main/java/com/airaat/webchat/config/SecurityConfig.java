@@ -1,5 +1,6 @@
 package com.airaat.webchat.config;
 
+import com.airaat.webchat.config.middleware.JwtFilter;
 import com.airaat.webchat.service.JwtService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;

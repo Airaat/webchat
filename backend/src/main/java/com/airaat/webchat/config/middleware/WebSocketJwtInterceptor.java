@@ -1,4 +1,4 @@
-package com.airaat.webchat.config;
+package com.airaat.webchat.config.middleware;
 
 import com.airaat.webchat.service.JwtService;
 import lombok.AllArgsConstructor;

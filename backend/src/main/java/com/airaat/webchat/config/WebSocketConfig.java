@@ -1,5 +1,6 @@
 package com.airaat.webchat.config;
 
+import com.airaat.webchat.config.middleware.WebSocketJwtInterceptor;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
