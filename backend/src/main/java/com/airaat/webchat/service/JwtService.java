@@ -1,6 +1,6 @@
 package com.airaat.webchat.service;
 
-import com.airaat.webchat.config.JwtProperties;
+import com.airaat.webchat.config.property.JwtProperties;
 import com.airaat.webchat.domain.dto.UserPayload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

@@ -1,4 +1,4 @@
-package com.airaat.webchat.config;
+package com.airaat.webchat.config.property;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
