@@ -40,6 +40,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({
                         height: 48,
                         mr: 2,
                         position: 'relative',
+                        overflow: 'unset',
                         '&::after': chat.isOnline ? {
                             content: '""',
                             position: 'absolute',

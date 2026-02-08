@@ -4,6 +4,7 @@ import {useAuth} from '../../hooks/useAuth';
 import {useChatPage} from "../../hooks/useChatPage";
 import {ChatWindow} from '../../components/chat/chat-window/ChatWindow';
 import {ChatMenu} from '../../components/chat/chat-menu/ChatMenu';
+import {usePresence} from "../../hooks/usePresence";
 
 export const ChatPage: React.FC = () => {
     const authContext = useAuth();
@@ -15,6 +16,8 @@ export const ChatPage: React.FC = () => {
         createChat,
         selectChat,
     } = useChatPage(authContext);
+
+    usePresence(authContext);
 
     return (
         authContext.user && (

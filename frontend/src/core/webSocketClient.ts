@@ -167,7 +167,7 @@ class WebSocketClient {
         }
     }
 
-    send<T>(destination: string, body: T) {
+    send<T>(destination: string, body?: T) {
         if (!this.client || !this.client.connected) {
             throw new Error('WebSocket not connected');
         }

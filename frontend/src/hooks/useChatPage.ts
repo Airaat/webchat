@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
-import type {ChatItem, ChatNotification, Message, UserItem} from '../types/chat';
+import type {ChatItem, ChatNotification, Message, UserItem, UserPresence} from '../types/chat';
 import {chatService} from '../services/chatService';
 import type {AuthContextType} from "../contexts/AuthContext.tsx";
 import {useNavigate} from "react-router-dom";
@@ -106,9 +106,18 @@ export const useChatPage = (authContext: AuthContextType) => {
         });
     }, []);
 
+    const handlePresenceNotification = useCallback((presence: UserPresence) => {
+        setChats(prevChats => prevChats.map(chat => {
+            return chat.userId === presence.userId
+                ? {...chat, isOnline: presence.online}
+                : chat;
+        }));
+    }, []);
+
     useNotifications({
         onMessageReceived: addMessage,
-        onNotificationReceived: handleChatNotification
+        onNotificationReceived: handleChatNotification,
+        onPresenceUpdate: handlePresenceNotification
     });
 
     const displayedMessages = selectedChat ? messages : [];

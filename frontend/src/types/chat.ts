@@ -62,6 +62,7 @@ export interface ChatItem {
     mutedUntil?: Date;
     unreadCount?: number;
     isOnline?: boolean;
+    userId?: number;
 }
 
 export interface PaginatedMessages {
@@ -74,6 +75,16 @@ export interface PaginatedMessages {
     totalElements: number;
     size: number;
     number: number;
+}
+
+export interface PresenceRequest {
+    isOnline: boolean;
+}
+
+export interface UserPresence {
+    userId: number;
+    online: boolean;
+    lastSeenAt: string;
 }
 
 export interface UserItem {

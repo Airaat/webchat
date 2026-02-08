@@ -1,26 +1,30 @@
 import {useEffect, useRef} from "react";
-import type {Message, ChatNotification} from "../types/chat";
+import type {Message, ChatNotification, UserPresence} from "../types/chat";
 import {webSocketClient} from "../core/webSocketClient";
 
 interface UseNotificationsProps {
     onMessageReceived: (message: Message) => void;
     onNotificationReceived: (notification: ChatNotification) => void;
+    onPresenceUpdate: (presence: UserPresence) => void;
 }
 
 export const useNotifications = ({
                                      onMessageReceived,
-                                     onNotificationReceived
+                                     onNotificationReceived,
+                                     onPresenceUpdate,
                                  }: UseNotificationsProps) => {
     const subscriptions = useRef<Map<string, string>>(new Map());
     const callbackRef = useRef({
         onMessageReceived,
-        onNotificationReceived
+        onNotificationReceived,
+        onPresenceUpdate,
     });
 
     useEffect(() => {
         callbackRef.current = {
             onMessageReceived,
-            onNotificationReceived
+            onNotificationReceived,
+            onPresenceUpdate,
         };
     });
 
@@ -33,6 +37,16 @@ export const useNotifications = ({
                 callbackRef.current.onMessageReceived
             );
             subscriptions.current.set('messages', messageSub);
+        };
+
+        const subscribeToPresence = () => {
+            if (subscriptions.current.has('presence')) return;
+
+            const presenceSub = webSocketClient.subscribe<UserPresence>(
+                '/user/queue/presence',
+                callbackRef.current.onPresenceUpdate
+            );
+            subscriptions.current.set('presence', presenceSub);
         };
 
         const subscribeToNotifications = () => {
@@ -58,6 +72,7 @@ export const useNotifications = ({
         const handleConnectionChange = (connected: boolean) => {
             if (connected) {
                 subscribeToNotifications();
+                subscribeToPresence();
                 subscribeToMessages();
                 subscribeToErrors();
             }
@@ -72,6 +87,7 @@ export const useNotifications = ({
         return () => {
             subscriptions.current.forEach(sub => webSocketClient.unsubscribe(sub));
             subscriptions.current.clear();
+            webSocketClient.disconnect();
         };
     }, []);
 }
