@@ -21,9 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -55,7 +53,7 @@ class ChatController {
                 .map(UserResponse::from)
                 .toList();
 
-        return ResponseEntity.ok(new ChatSearchResponse(chats,users));
+        return ResponseEntity.ok(new ChatSearchResponse(chats, users));
     }
 
     @GetMapping("/{id}")
