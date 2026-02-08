@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 public class ChatItem {
     private Long id;
     private ChatType type;
+    private Long userId;
+    private Boolean isOnline;
     private GroupRole groupRole;
     private LocalDateTime mutedUntil;
     private String lastMessage;
@@ -22,7 +24,6 @@ public class ChatItem {
     private String title;
     /**
      * TODO:
-     * private Boolean isOnline; // if private chat show usr.is_active, otherwise null
      * private Integer unreadCount; // idk how do we count this
      * */
 
@@ -39,6 +40,7 @@ public class ChatItem {
                 .type(ChatType.valueOf(view.getType()))
                 .groupRole(view.getRole() != null ? GroupRole.valueOf(view.getRole()) : null)
                 .mutedUntil(view.getMutedUntil() != null ? view.getMutedUntil().toLocalDateTime() : null)
+                .userId(view.getUserId())
                 .build();
     }
 
@@ -53,6 +55,7 @@ public class ChatItem {
                 .groupRole(group != null ? GroupRole.OWNER : null)
                 .mutedUntil(null)
                 .lastMessage(null)
+                .userId(null)
                 .build();
     }
 }

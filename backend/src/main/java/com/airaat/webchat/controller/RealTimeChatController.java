@@ -1,7 +1,6 @@
 package com.airaat.webchat.controller;
 
 import com.airaat.webchat.domain.dto.ChatNotification;
-import com.airaat.webchat.domain.dto.UserPresence;
 import com.airaat.webchat.domain.dto.request.ChatMessageRequest;
 import com.airaat.webchat.domain.dto.request.TypingRequest;
 import com.airaat.webchat.domain.dto.response.ErrorResponse;
@@ -94,22 +93,6 @@ public class RealTimeChatController {
             messagingTemplate.convertAndSend("/topic/chat/" + chatId + "/typing", response);
         } catch (MessagingException e) {
             log.error("Error updating typing status of user [{}] to chat {}: {}", user.getUsername(), chatId, e.getMessage());
-        }
-    }
-
-    @MessageMapping("/chat/{chatId}/presence")
-    public void updateUserPresence(@DestinationVariable Long chatId,
-                                   @Payload UserPresence dto,
-                                   Principal principal) {
-        User user = userService.getByUsername(principal.getName());
-        if (!chatService.hasAccess(chatId, user)) {
-            throw new SecurityException("No permission to access this chat");
-        }
-
-        try {
-            messagingTemplate.convertAndSend("/topic/chat/" + chatId + "/presence", dto);
-        } catch (MessagingException e) {
-            log.error("Error updating presence of user [{}] to chat {}: {}", user.getUsername(), chatId, e.getMessage());
         }
     }
 

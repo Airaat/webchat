@@ -1,6 +1,7 @@
 package com.airaat.webchat.service;
 
 import com.airaat.webchat.domain.dto.ChatGroupDTO;
+import com.airaat.webchat.domain.dto.UserPresence;
 import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.ChatItem;
 import com.airaat.webchat.domain.enums.ChatType;
@@ -23,10 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +34,7 @@ public class ChatService {
     private final ChatParticipantRepository participantRepository;
     private final ChatGroupRepository groupRepository;
     private final ChatGroupMemberRepository groupMemberRepository;
+    private final UserPresenceService userPresenceService;
 
     public boolean hasAccess(Long chatId, User author) {
         return repository.existsByIdAndUserId(chatId, author.getId());
@@ -50,7 +49,9 @@ public class ChatService {
         ChatView view = repository.findByIdForUser(id, user.getId()).orElseThrow(
                 () -> new EntityNotFoundException("Chat with id " + id + " not found"));
 
-        return ChatItem.from(view);
+        ChatItem item = ChatItem.from(view);
+        enrichWithPresence(List.of(item));
+        return item;
     }
 
     public Page<ChatItem> getAllForUser(User user, int num) {
@@ -59,13 +60,44 @@ public class ChatService {
                 Sort.Order.desc("last_message_at").nullsLast(),
                 Sort.Order.desc("created_at")
         ));
-        Page<ChatView> result = repository.findAllForUser(user.getId(), page);
-        return result.map(ChatItem::from);
+        Page<ChatView> views = repository.findAllForUser(user.getId(), page);
+        Page<ChatItem> result = views.map(ChatItem::from);
+
+        enrichWithPresence(result.getContent());
+        return result;
     }
 
     public List<ChatItem> searchForUser(User user, String searchTerm) {
-        List<ChatView> result = repository.searchChatsForUser(user.getId(), searchTerm);
-        return result.stream().map(ChatItem::from).toList();
+        List<ChatView> views = repository.searchChatsForUser(user.getId(), searchTerm);
+        List<ChatItem> result = views.stream().map(ChatItem::from).toList();
+
+        enrichWithPresence(result);
+        return result;
+    }
+
+    private void enrichWithPresence(List<ChatItem> chatItems) {
+        Set<Long> userIds = chatItems.stream()
+                .filter(it -> it.getType() == ChatType.PRIVATE)
+                .map(ChatItem::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (userIds.isEmpty()) {
+            return;
+        }
+
+        Map<Long, UserPresence> presenceMap = userPresenceService.checkStatus(userIds);
+
+        for (ChatItem chat : chatItems) {
+            if (chat.getType() == ChatType.PRIVATE && chat.getUserId() != null) {
+                UserPresence presence = presenceMap.get(chat.getUserId());
+                if (presence != null) {
+                    chat.setIsOnline(presence.isOnline());
+                } else {
+                    chat.setIsOnline(false);
+                }
+            }
+        }
     }
 
     @Transactional
