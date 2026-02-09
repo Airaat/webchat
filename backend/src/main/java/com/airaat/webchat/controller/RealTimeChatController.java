@@ -2,6 +2,7 @@ package com.airaat.webchat.controller;
 
 import com.airaat.webchat.domain.dto.ChatNotification;
 import com.airaat.webchat.domain.dto.request.ChatMessageRequest;
+import com.airaat.webchat.domain.dto.request.MessagePageRequest;
 import com.airaat.webchat.domain.dto.request.TypingRequest;
 import com.airaat.webchat.domain.dto.response.ErrorResponse;
 import com.airaat.webchat.domain.dto.response.MessageResponse;
@@ -104,10 +105,7 @@ public class RealTimeChatController {
         }
 
         log.info("Subscribing to chat {}: {}", chatId, principal.getName());
-        List<Message> recentMessages = messageService.getRecentMessages(chatId, 50);
-        return recentMessages.stream()
-                .map(MessageResponse::of)
-                .toList();
+        return messageService.getMessages(MessagePageRequest.of(chatId)).getMessages();
     }
 
     @MessageExceptionHandler

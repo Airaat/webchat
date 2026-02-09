@@ -6,16 +6,12 @@ import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.*;
 import com.airaat.webchat.domain.enums.ChatType;
 import com.airaat.webchat.domain.model.Chat;
-import com.airaat.webchat.domain.model.Message;
 import com.airaat.webchat.domain.model.User;
-import com.airaat.webchat.exception.ValidationError;
 import com.airaat.webchat.service.ChatService;
-import com.airaat.webchat.service.MessageService;
 import com.airaat.webchat.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +26,6 @@ import java.util.stream.Collectors;
 class ChatController {
     private final UserService userService;
     private final ChatService chatService;
-    private final MessageService messageService;
 
     @GetMapping
     public ResponseEntity<ChatListResponse> chats(@RequestParam(defaultValue = "0", required = false) Integer page) {
@@ -86,25 +81,6 @@ class ChatController {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(chatItem);
-    }
-
-    @GetMapping("/{chatId}/messages")
-    public PaginatedMessages chatHistory(@PathVariable Long chatId,
-                                         @RequestParam(defaultValue = "0") int p,
-                                         @RequestParam(defaultValue = "50") int s,
-                                         Principal principal) {
-        User user = userService.getByUsername(principal.getName());
-        if (!chatService.hasAccess(chatId, user)) {
-            throw new SecurityException("You do not have permission to access chat history");
-        }
-
-        if (p < 0 || s < 0) {
-            String purpose = p < 0 ? "number" : "size";
-            throw new ValidationError("Invalid parameter: page " + purpose);
-        }
-
-        Page<Message> page = messageService.getRecentMessages(chatId, PageRequest.of(p, s));
-        return PaginatedMessages.of(page);
     }
 
     @PostMapping("/mute")
