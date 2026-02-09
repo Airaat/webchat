@@ -60,9 +60,9 @@ export const useChatPage = (authContext: AuthContextType) => {
         const chatId = chat.id.toString();
 
         if (!messageStore.current.has(chatId)) {
-            const {content} = await chatService.getChatMessages(chatId);
-            messageStore.current.put(chatId, content);
-            setMessages(content);
+            const {messages} = await chatService.getChatMessages(chatId);
+            messageStore.current.put(chatId, messages);
+            setMessages(messages);
         } else {
             setMessages(messageStore.current.get(chatId)!);
         }

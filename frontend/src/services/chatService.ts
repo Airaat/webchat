@@ -1,18 +1,22 @@
 import {apiClient} from "../core/apiClient";
-import type {ChatItem, ChatListData, PaginatedMessages, ChatSearchData} from "../types/chat";
+import type {ChatItem, ChatListData, MessagePageResponse, ChatSearchData, PaginationOptions} from "../types/chat";
 
 class ChatService {
     async getChats(): Promise<ChatListData> {
         return apiClient.get<ChatListData>("/chats");
     }
 
-    async getChatMessages(chatId: string, page: number = 0, size: number = 50): Promise<PaginatedMessages> {
-        const params = new URLSearchParams({
-            p: page.toString(),
-            s: size.toString(),
-        }).toString();
+    async getChatMessages(
+        chatId: string,
+        options: PaginationOptions = {}
+    ): Promise<MessagePageResponse> {
+        const {cursor, limit} = options;
+        const params = new URLSearchParams();
 
-        return apiClient.get<PaginatedMessages>(`/chats/${chatId}/messages?${params}`);
+        if (cursor) params.set('cursor', cursor);
+        if (limit) params.set('limit', limit.toString());
+
+        return apiClient.get<MessagePageResponse>(`/chats/${chatId}/messages?${params}`);
     }
 
     async searchChatsAndUsers(query: string): Promise<ChatSearchData> {

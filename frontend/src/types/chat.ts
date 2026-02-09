@@ -65,16 +65,22 @@ export interface ChatItem {
     userId?: number;
 }
 
-export interface PaginatedMessages {
-    content: Message[];
-    first: boolean;
-    last: boolean;
-    hasNext: boolean;
+export interface PageInfo {
+    nextCursor: string;
+    prevCursor: string;
+    hasMore: boolean;
     hasPrevious: boolean;
-    totalPages: number;
-    totalElements: number;
-    size: number;
-    number: number;
+    totalCount: number;
+}
+
+export interface MessagePageResponse {
+    messages: Message[];
+    pageInfo: PageInfo;
+}
+
+export interface PaginationOptions {
+    cursor?: string;
+    limit?: number;
 }
 
 export interface PresenceRequest {
