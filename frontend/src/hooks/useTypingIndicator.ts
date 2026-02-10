@@ -1,45 +1,66 @@
-import {useEffect, useRef} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import type {User} from "../types/auth";
+import {webSocketClient} from "../core/webSocketClient";
+import type {TypingRequest} from "../types/chat";
 
 export interface UseTypingIndicatorProps {
+    user: User;
+    chatId?: string;
     currentMessage: string;
-
-    sendTyping(typing: boolean): void;
 }
 
-export function useTypingIndicator({currentMessage, sendTyping}: UseTypingIndicatorProps) {
-    const typingTimeoutRef = useRef<number | undefined>(undefined);
-    const hasSentTypingRef = useRef(false);
+const TYPING_TIMEOUT = 1000;
+
+export function useTypingIndicator({user, chatId, currentMessage}: UseTypingIndicatorProps) {
+    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+    const typingTimeoutRef = useRef<number>(null);
+    const isTypingRef = useRef(false);
+
+    const handleTypingUpdate = useCallback((username: string, typing: boolean) => {
+        if (username === user.username) return;
+
+        setTypingUsers(prev => {
+            const hasUser = prev.has(username);
+            if (typing === hasUser) return prev;
+
+            const updated = new Set(prev);
+            (typing)
+                ? updated.add(username)
+                : updated.delete(username);
+            return updated;
+        });
+    }, [user.username]);
+
+    const sendTyping = useCallback((typing: boolean) => {
+        if (!chatId) return;
+        if (isTypingRef.current === typing) return;
+
+        isTypingRef.current = typing;
+        webSocketClient.send<TypingRequest>(`/app/chat/${chatId}/typing`, {typing});
+    }, [chatId]);
 
     useEffect(() => {
-        if (currentMessage.trim() && !hasSentTypingRef.current) {
+        const hasContent = currentMessage.trim().length > 0;
+        const clearTimer = () => {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        }
+
+        clearTimer();
+        if (hasContent) {
             sendTyping(true);
-            hasSentTypingRef.current = true;
-        }
-    }, [currentMessage, sendTyping]);
 
-    useEffect(() => {
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-        }
-
-        if (currentMessage.trim()) {
             typingTimeoutRef.current = setTimeout(() => {
-                if (hasSentTypingRef.current) {
-                    sendTyping(false);
-                    hasSentTypingRef.current = false;
-                }
-            }, 1000);
-        } else {
-            if (hasSentTypingRef.current) {
                 sendTyping(false);
-                hasSentTypingRef.current = false;
-            }
+            }, TYPING_TIMEOUT);
+        } else {
+            sendTyping(false);
         }
 
-        return () => {
-            if (typingTimeoutRef.current) {
-                clearTimeout(typingTimeoutRef.current);
-            }
-        };
+        return clearTimer;
     }, [currentMessage, sendTyping]);
+
+    return {
+        typingUsers,
+        handleTypingUpdate
+    }
 }

@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState} from 'react';
 import {Box} from '@mui/material';
 import type {ChatItem, Message, MessageRequest} from '../../../types/chat';
 import type {User} from '../../../types/auth'
@@ -20,30 +20,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                                           messages,
                                                       }) => {
     const [currentMessage, setCurrentMessage] = useState('');
-    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
-
-    const handleTypingUpdate = useCallback((username: string, typing: boolean) => {
-        if (username === user.username) return;
-
-        setTypingUsers(prev => {
-            const updated = new Set(prev);
-            if (typing) {
-                updated.add(username);
-            } else {
-                updated.delete(username);
-            }
-            return updated;
-        });
-    }, [user.username]);
-
-    const {sendMessage, sendTyping, isConnected} = useChatWebSocket({
+    const {typingUsers, handleTypingUpdate} = useTypingIndicator({
+        user,
         chatId: chat?.id,
-        onTypingUpdate: handleTypingUpdate,
+        currentMessage,
     });
 
-    useTypingIndicator({
-        currentMessage,
-        sendTyping,
+    const {sendMessage, isConnected} = useChatWebSocket({
+        chatId: chat?.id,
+        onTypingUpdate: handleTypingUpdate,
     });
 
     const handleSendMessage = () => {
