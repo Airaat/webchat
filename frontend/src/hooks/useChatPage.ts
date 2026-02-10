@@ -1,13 +1,11 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import type {ChatItem, ChatNotification, Message, UserItem, UserPresence} from '../types/chat';
 import {chatService} from '../services/chatService';
-import type {AuthContextType} from "../contexts/AuthContext.tsx";
-import {useNavigate} from "react-router-dom";
 import {useNotifications} from "./useNotifications";
 import {LRUCache} from "../core/data-structures/LRUCache";
+import {usePresence} from "./usePresence.ts";
 
-export const useChatPage = (authContext: AuthContextType) => {
-    const navigate = useNavigate();
+export const useChatPage = () => {
     const [chats, setChats] = useState<ChatItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -20,15 +18,8 @@ export const useChatPage = (authContext: AuthContextType) => {
         selectedChatRef.current = selectedChat;
     });
 
-    // Auth check
+    // initialization
     useEffect(() => {
-        if (authContext.isLoading) return;
-
-        if (authContext.user === null) {
-            navigate('/login');
-            return;
-        }
-
         const loadChats = async () => {
             try {
                 setLoading(true);
@@ -42,7 +33,7 @@ export const useChatPage = (authContext: AuthContextType) => {
         }
 
         loadChats();
-    }, [authContext.isLoading, authContext.user, navigate]);
+    }, []);
 
     const createChat = async (user: UserItem): Promise<ChatItem> => {
         try {
@@ -114,6 +105,7 @@ export const useChatPage = (authContext: AuthContextType) => {
         }));
     }, []);
 
+    usePresence();
     useNotifications({
         onMessageReceived: addMessage,
         onNotificationReceived: handleChatNotification,
