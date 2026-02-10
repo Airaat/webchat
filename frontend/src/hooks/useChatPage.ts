@@ -1,18 +1,40 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
-import type {ChatItem, ChatNotification, Message, UserItem, UserPresence} from '../types/chat';
+import type {ChatItem, ChatNotification, UserItem, UserPresence} from '../types/chat';
 import {chatService} from '../services/chatService';
 import {useNotifications} from "./useNotifications";
-import {LRUCache} from "../core/data-structures/LRUCache";
 import {usePresence} from "./usePresence.ts";
+import {usePaginatedMessages} from "./usePaginatedMessages.ts";
 
 export const useChatPage = () => {
     const [chats, setChats] = useState<ChatItem[]>([]);
     const [loading, setLoading] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([]);
     const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null);
-
-    const messageStore = useRef(new LRUCache<Message[]>());
     const selectedChatRef = useRef(selectedChat);
+
+    const {
+        messages,
+        pageInfo,
+        hasMore,
+        isLoadingMore,
+        receiveMessage,
+        fetchMessages,
+    } = usePaginatedMessages(
+        selectedChat?.id,
+        (msg) => {
+            setChats(prevChats => {
+                const chatId = msg.chatId.toString();
+                const target = prevChats.find((c) => c.id === chatId);
+                if (!target) return prevChats;
+
+                const updatedChat: ChatItem = {
+                    ...target,
+                    lastMessage: msg.content,
+                    lastMessageAt: msg.timestamp,
+                };
+                return [updatedChat, ...prevChats.filter(chat => chat.id !== chatId)];
+            });
+        }
+    );
 
     useEffect(() => {
         selectedChatRef.current = selectedChat;
@@ -50,38 +72,20 @@ export const useChatPage = () => {
         setSelectedChat(chat);
         const chatId = chat.id.toString();
 
-        if (!messageStore.current.has(chatId)) {
-            const {messages} = await chatService.getChatMessages(chatId);
-            messageStore.current.put(chatId, messages);
-            setMessages(messages);
-        } else {
-            setMessages(messageStore.current.get(chatId)!);
+        if (!pageInfo) {
+            console.log("Fetching initial messages for chat:", chatId);
+            await fetchMessages(chatId);
         }
     };
 
-    const addMessage = useCallback((msg: Message) => {
-        const chatId = msg.chatId.toString();
-
-        const cachedMessages = messageStore.current.get(chatId) || [];
-        messageStore.current.put(chatId, [...cachedMessages, msg]);
-
-        const currentChatId = selectedChatRef.current?.id.toString();
-        if (currentChatId === chatId) {
-            setMessages(prev => [...prev, msg]);
+    const loadMoreMessages = useCallback(async () => {
+        if (!selectedChat || !hasMore || isLoadingMore) {
+            return;
         }
 
-        setChats(prevChats => {
-            const target = prevChats.find((c) => c.id === chatId);
-            if (!target) return prevChats;
-
-            const updatedChat: ChatItem = {
-                ...target,
-                lastMessage: msg.content,
-                lastMessageAt: msg.timestamp,
-            };
-            return [updatedChat, ...prevChats.filter(chat => chat.id !== chatId)];
-        });
-    }, []);
+        console.log("Loading more messages for chat:", selectedChat.id);
+        await fetchMessages(selectedChat.id);
+    }, [selectedChat, hasMore, isLoadingMore, fetchMessages]);
 
     const handleChatNotification = useCallback((notification: ChatNotification) => {
         setChats(prevChats => {
@@ -107,7 +111,7 @@ export const useChatPage = () => {
 
     usePresence();
     useNotifications({
-        onMessageReceived: addMessage,
+        onMessageReceived: receiveMessage,
         onNotificationReceived: handleChatNotification,
         onPresenceUpdate: handlePresenceNotification
     });
@@ -121,5 +125,6 @@ export const useChatPage = () => {
         selectedChat,
         createChat,
         selectChat,
+        loadMoreMessages,
     };
 };

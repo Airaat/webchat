@@ -66,8 +66,8 @@ export interface ChatItem {
 }
 
 export interface PageInfo {
-    nextCursor: string;
-    prevCursor: string;
+    nextCursor: string | null;
+    prevCursor: string | null;
     hasMore: boolean;
     hasPrevious: boolean;
     totalCount: number;
@@ -79,7 +79,7 @@ export interface MessagePageResponse {
 }
 
 export interface PaginationOptions {
-    cursor?: string;
+    cursor?: string | null;
     limit?: number;
 }
 
