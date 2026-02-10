@@ -80,7 +80,6 @@ export const useNotifications = ({
 
         // Initial connection
         webSocketClient.connect()
-            .then(() => handleConnectionChange(true))
             .catch(error => console.error('Failed to connect WebSocket:', error));
         webSocketClient.onConnectionChange(handleConnectionChange);
 
