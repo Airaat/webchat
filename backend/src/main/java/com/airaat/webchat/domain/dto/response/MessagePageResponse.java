@@ -15,16 +15,6 @@ public class MessagePageResponse {
     private List<MessageResponse> messages;
     private PageInfo pageInfo;
 
-    @Data
-    @Builder
-    public static class PageInfo{
-        private String nextCursor;
-        private String prevCursor;
-        private Boolean hasMore;
-        private Boolean hasPrevious;
-        private Long totalCount;
-    }
-
     public static String createCursor(Message message) {
         if (message == null) return null;
 

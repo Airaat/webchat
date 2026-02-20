@@ -4,6 +4,7 @@ import com.airaat.webchat.domain.dto.request.ChatMessageRequest;
 import com.airaat.webchat.domain.dto.request.MessagePageRequest;
 import com.airaat.webchat.domain.dto.response.MessagePageResponse;
 import com.airaat.webchat.domain.dto.response.MessageResponse;
+import com.airaat.webchat.domain.dto.response.PageInfo;
 import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.Message;
 import com.airaat.webchat.domain.model.User;
@@ -43,29 +44,35 @@ public class MessageService {
     }
 
     private MessagePageResponse buildResponse(Long chatId, List<Message> messages) {
-        Message lastMessage = messages.getLast();
-        Message firstMessage = messages.getFirst();
+        PageInfo pageInfo = PageInfo.empty();
 
-        String nextCursor = MessagePageResponse.createCursor(lastMessage);
-        String prevCursor = MessagePageResponse.createCursor(firstMessage);
+        if (!messages.isEmpty()) {
+            Message lastMessage = messages.getLast();
+            Message firstMessage = messages.getFirst();
 
-        MessagePageStats stats = repository.aggregateInfo(
-                chatId,
-                lastMessage.getId(),
-                firstMessage.getId()
-        );
+            String nextCursor = MessagePageResponse.createCursor(lastMessage);
+            String prevCursor = MessagePageResponse.createCursor(firstMessage);
+
+            MessagePageStats stats = repository.aggregateInfo(
+                    chatId,
+                    lastMessage.getId(),
+                    firstMessage.getId()
+            );
+
+            pageInfo = PageInfo.builder()
+                    .nextCursor(nextCursor)
+                    .prevCursor(prevCursor)
+                    .hasMore(stats.getHasMore())
+                    .hasPrevious(stats.getHasPrev())
+                    .totalCount(stats.getTotalCount())
+                    .build();
+        }
 
         return MessagePageResponse.builder()
                 .messages(messages.stream()
                         .map(MessageResponse::of)
                         .toList())
-                .pageInfo(MessagePageResponse.PageInfo.builder()
-                        .nextCursor(nextCursor)
-                        .prevCursor(prevCursor)
-                        .hasMore(stats.getHasMore())
-                        .hasPrevious(stats.getHasPrev())
-                        .totalCount(stats.getTotalCount())
-                        .build())
+                .pageInfo(pageInfo)
                 .build();
     }
 
