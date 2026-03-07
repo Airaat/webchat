@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Box} from '@mui/material';
+import {Box, Typography} from '@mui/material';
 import type {ChatItem, Message, MessageRequest} from '../../../types/chat';
 import type {User} from '../../../types/auth'
 import {useChatWebSocket} from '../../../hooks/useChatWebSocket';
@@ -78,8 +78,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
             <MessageList
                 messages={messages}
-                indicatorText={typingIndicatorText}
             />
+
+            {/* Typing Indicator */}
+            {typingIndicatorText && (
+                <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                    {typingIndicatorText}
+                </Typography>
+            )}
 
             <InputArea
                 currentMessage={currentMessage}

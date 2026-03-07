@@ -1,14 +1,13 @@
 import React, {useEffect, useRef} from 'react';
-import {List, ListItem, ListItemText, Typography} from '@mui/material';
+import {List, ListItem, ListItemText} from '@mui/material';
 import type {Message} from '../../../types/chat';
 import {formatMessageTimestamp} from "../../../utils/dateUtils";
 
 export interface MessageListProps {
     messages: Message[];
-    indicatorText: string;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({messages, indicatorText}) => {
+export const MessageList: React.FC<MessageListProps> = ({messages}) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -59,16 +58,6 @@ export const MessageList: React.FC<MessageListProps> = ({messages, indicatorText
                 </ListItem>
             ))}
             <div ref={messagesEndRef}/>
-
-            {/* Typing Indicator */}
-            {indicatorText && (
-                <ListItem>
-                    <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                        {indicatorText}
-                    </Typography>
-                </ListItem>
-            )}
         </List>
     );
-
 };
