@@ -78,7 +78,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({
                         </Typography>
                         {chat.lastMessageAt && (
                             <Typography variant="caption" color="text.secondary">
-                                {formatChatTime(chat.lastMessageAt)}
+                                {formatChatTime(chat.lastMessageAt.toString())}
                             </Typography>
                         )}
                     </Box>

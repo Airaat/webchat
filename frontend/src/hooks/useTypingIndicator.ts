@@ -24,9 +24,11 @@ export function useTypingIndicator({user, chatId, currentMessage}: UseTypingIndi
             if (typing === hasUser) return prev;
 
             const updated = new Set(prev);
-            (typing)
-                ? updated.add(username)
-                : updated.delete(username);
+            if (typing) {
+                updated.add(username)
+            } else {
+                updated.delete(username);
+            }
             return updated;
         });
     }, [user.username]);
