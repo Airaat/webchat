@@ -21,10 +21,7 @@ export const useChatWebSocket = ({
     });
 
     useEffect(() => {
-        setConnected(webSocketClient.isConnected);
-        return () => {
-            webSocketClient.onConnectionChange(conn => setConnected(conn));
-        }
+        webSocketClient.onConnectionChange(conn => setConnected(conn));
     }, [setConnected]);
 
     useEffect(() => {
