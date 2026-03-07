@@ -49,6 +49,7 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
         <Box
             sx={{
                 width: 320,
+                flexShrink: 0,
                 height: '100vh',
                 borderRight: '1px solid',
                 borderColor: 'divider',
