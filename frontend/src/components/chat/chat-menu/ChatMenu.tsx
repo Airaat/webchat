@@ -6,13 +6,13 @@ import {SearchBar} from './SearchBar';
 import {ChatList} from './ChatList';
 import {SearchResults} from './SearchResults';
 import {Loader} from '../../ui/Feedback/Loader';
+import {useChats} from "../../../hooks/useChats";
 
 interface ChatMenuProps {
     chats: ChatItem[];
     onChatSelect: (chat: ChatItem) => void;
     onChatCreate: (user: UserItem) => Promise<ChatItem>;
     selectedChatId?: string;
-    loading?: boolean;
 }
 
 export const ChatMenu: React.FC<ChatMenuProps> = ({
@@ -20,7 +20,6 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
                                                       onChatCreate,
                                                       onChatSelect,
                                                       selectedChatId,
-                                                      loading = false
                                                   }) => {
     const {
         searchResults,
@@ -29,6 +28,7 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
         resetSearch,
         setSearchTerm,
     } = useUserSearch();
+    const {isLoading} = useChats();
 
     const handleUserSelect = async (user: UserItem) => {
         const newChat = await onChatCreate(user);
@@ -42,8 +42,8 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
     };
 
     const isSearchActive = isSearching || searchTerm.trim() !== '';
-    const showSearchResults = isSearchActive && !loading;
-    const showChatList = !isSearchActive && !loading;
+    const showSearchResults = isSearchActive && !isLoading;
+    const showChatList = !isSearchActive && !isLoading;
 
     return (
         <Box
@@ -65,7 +65,7 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
                 placeholder="Search users..."
             />
 
-            {loading && <Loader/>}
+            {isLoading && <Loader/>}
 
             {showSearchResults && (
                 <SearchResults

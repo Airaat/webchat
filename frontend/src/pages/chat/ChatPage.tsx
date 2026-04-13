@@ -9,7 +9,6 @@ export const ChatPage: React.FC = () => {
     const authContext = useAuth();
     const {
         chats,
-        loading,
         messages,
         selectedChat,
         createChat,
@@ -32,7 +31,6 @@ export const ChatPage: React.FC = () => {
                     selectedChatId={selectedChat?.id}
                     onChatSelect={selectChat}
                     onChatCreate={createChat}
-                    loading={loading}
                 />
                 <ChatWindow
                     user={authContext.user}

@@ -2,8 +2,8 @@ import {apiClient} from "../core/apiClient";
 import type {ChatItem, ChatListData, MessagePageResponse, ChatSearchData, PaginationOptions} from "../types/chat";
 
 class ChatService {
-    async getChats(): Promise<ChatListData> {
-        return apiClient.get<ChatListData>("/chats");
+    async getChats(page: number): Promise<ChatListData> {
+        return apiClient.get<ChatListData>(`/chats?page=${page}`);
     }
 
     async getChatMessages(
