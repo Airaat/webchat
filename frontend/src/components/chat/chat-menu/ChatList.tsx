@@ -6,7 +6,7 @@ import {listStyles} from '../../../styles/chatLists';
 
 interface ChatListProps {
     chats: ChatItem[];
-    selectedChatId?: string;
+    selectedChatId?: number;
     onChatSelect: (chat: ChatItem) => void;
     emptyMessage?: string;
 }

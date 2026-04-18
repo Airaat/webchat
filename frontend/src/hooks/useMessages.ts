@@ -11,7 +11,7 @@ import {type InfiniteData, useInfiniteQuery} from "@tanstack/react-query";
  * - With prevCursor → N messages older than the cursor, ascending
  * - pages[0] = most recent page, pages[N] = oldest page
  */
-export const useMessages = (chatId: string | null = null) => {
+export const useMessages = (chatId: number | null = null) => {
     return useInfiniteQuery<MessagePageResponse>({
         queryKey: ['messages', chatId],
         queryFn: ({pageParam}) =>

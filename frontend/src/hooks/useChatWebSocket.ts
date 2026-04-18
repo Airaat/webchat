@@ -3,7 +3,7 @@ import {webSocketClient} from '../core/webSocketClient';
 import type {MessageRequest, TypingNotification} from '../types/chat';
 
 interface UseChatWebSocketProps {
-    chatId?: string;
+    chatId?: number;
     onTypingUpdate: (username: string, isTyping: boolean) => void;
 }
 

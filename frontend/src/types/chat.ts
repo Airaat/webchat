@@ -53,7 +53,7 @@ export interface ChatSearchData {
 }
 
 export interface ChatItem {
-    id: string;
+    id: number;
     title: string;
     type: 'PRIVATE' | 'GROUP';
     groupRole?: 'MEMBER' | 'ADMIN' | 'OWNER';

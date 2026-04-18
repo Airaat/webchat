@@ -5,7 +5,7 @@ import type {TypingRequest} from "../types/chat";
 
 export interface UseTypingIndicatorProps {
     user: User;
-    chatId?: string;
+    chatId?: number;
     currentMessage: string;
 }
 

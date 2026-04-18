@@ -12,7 +12,7 @@ interface ChatMenuProps {
     chats: ChatItem[];
     onChatSelect: (chat: ChatItem) => void;
     onChatCreate: (user: UserItem) => Promise<ChatItem>;
-    selectedChatId?: string;
+    selectedChatId?: number;
 }
 
 export const ChatMenu: React.FC<ChatMenuProps> = ({

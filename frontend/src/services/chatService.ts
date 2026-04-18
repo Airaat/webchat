@@ -7,7 +7,7 @@ class ChatService {
     }
 
     async getChatMessages(
-        chatId: string,
+        chatId: number,
         options: PaginationOptions = {}
     ): Promise<MessagePageResponse> {
         const {cursor, limit} = options;
