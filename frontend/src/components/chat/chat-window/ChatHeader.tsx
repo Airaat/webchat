@@ -1,9 +1,9 @@
-import React from 'react';
+import React, {memo} from 'react';
 import {Box, Tooltip, Typography} from '@mui/material';
 import {useAuth} from "../../../hooks/useAuth";
 import {useChatUIStore} from "../../../store/chatUIStore";
 
-export const ChatHeader: React.FC = () => {
+export const ChatHeader: React.FC = memo(() => {
     const authContext = useAuth();
     const chat = useChatUIStore((s) => s.selectedChat);
     const connectionStatus = useChatUIStore((s) => s.connection);
@@ -30,4 +30,4 @@ export const ChatHeader: React.FC = () => {
             </Tooltip>
         </Box>
     );
-};
+});

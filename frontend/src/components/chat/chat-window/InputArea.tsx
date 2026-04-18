@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {memo} from 'react';
 import {Box, Button, TextField} from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 
@@ -10,13 +10,13 @@ interface InputAreaProps {
     onKeyPress: (event: React.KeyboardEvent) => void;
 }
 
-export const InputArea: React.FC<InputAreaProps> = ({
-                                                        currentMessage,
-                                                        onMessageChange,
-                                                        onSendMessage,
-                                                        onKeyPress,
-                                                        disabled = false
-                                                    }) => {
+export const InputArea: React.FC<InputAreaProps> = memo(({
+                                                             currentMessage,
+                                                             onMessageChange,
+                                                             onSendMessage,
+                                                             onKeyPress,
+                                                             disabled = false
+                                                         }) => {
     return (
         <Box
             sx={{
@@ -53,4 +53,4 @@ export const InputArea: React.FC<InputAreaProps> = ({
             </Button>
         </Box>
     );
-};
+});

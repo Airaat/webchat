@@ -1,13 +1,14 @@
-import React, {useEffect, useRef} from 'react';
+import React, {memo, useEffect, useMemo, useRef} from 'react';
 import {List, ListItem, ListItemText} from '@mui/material';
-import type {Message} from '../../../types/chat';
 import {formatMessageTimestamp} from "../../../utils/dateUtils";
+import {selectMessages, useMessages} from "../../../hooks/useMessages";
+import {useChatUIStore} from "../../../store/chatUIStore";
 
-export interface MessageListProps {
-    messages: Message[];
-}
 
-export const MessageList: React.FC<MessageListProps> = ({messages}) => {
+export const MessageList: React.FC = memo(() => {
+    const chat = useChatUIStore((s) => s.selectedChat);
+    const {data} = useMessages(chat?.id);
+    const messages = useMemo(() => selectMessages(data), [data]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -60,4 +61,4 @@ export const MessageList: React.FC<MessageListProps> = ({messages}) => {
             <div ref={messagesEndRef}/>
         </List>
     );
-};
+});

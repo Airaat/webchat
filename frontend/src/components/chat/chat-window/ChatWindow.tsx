@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Box, Typography} from '@mui/material';
 import type {User} from '../../../types/auth'
 import {useChatWebSocket} from '../../../hooks/useChatWebSocket';
@@ -6,7 +6,6 @@ import {ChatHeader} from './ChatHeader';
 import {MessageList} from './MessageList';
 import {InputArea} from './InputArea';
 import {useTypingIndicator} from '../../../hooks/useTypingIndicator';
-import {selectMessages, useMessages} from "../../../hooks/useMessages";
 import {useChatUIStore} from "../../../store/chatUIStore";
 
 interface ChatWindowProps {
@@ -15,8 +14,6 @@ interface ChatWindowProps {
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
     const chat = useChatUIStore((s) => s.selectedChat);
-    const {data} = useMessages(chat?.id);
-    const messages = selectMessages(data);
     const [currentMessage, setCurrentMessage] = useState('');
     const {typingUsers, handleTypingUpdate} = useTypingIndicator({
         user,
@@ -29,7 +26,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
         onTypingUpdate: handleTypingUpdate,
     });
 
-    const handleSendMessage = () => {
+    const handleSendMessage = useCallback(() => {
         if (!currentMessage.trim() || !chat) return;
         sendMessage({
             type: 'TEXT',
@@ -39,14 +36,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
             timestamp: new Date()
         });
         setCurrentMessage('');
-    };
+    }, [chat, currentMessage, sendMessage, user]);
 
-    const handleKeyPress = (event: React.KeyboardEvent) => {
+    const handleKeyPress = useCallback((event: React.KeyboardEvent) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             handleSendMessage();
         }
-    };
+    }, [handleSendMessage]);
 
     const isInputDisabled = !isConnected || !chat;
     const typingIndicatorText = typingUsers.size > 0
@@ -67,10 +64,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
             }}
         >
             <ChatHeader/>
-
-            <MessageList
-                messages={messages}
-            />
+            <MessageList/>
 
             {/* Typing Indicator */}
             {typingIndicatorText && (
