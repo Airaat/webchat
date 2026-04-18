@@ -17,7 +17,7 @@ export const useChatPageActions = () => {
 
     const createChat = async (user: UserItem): Promise<ChatItem> => {
         try {
-            const chatItem = await chatService.createPrivateChat(Number.parseInt(user.id));
+            const chatItem = await chatService.createPrivateChat(user.id);
             queryClient.setQueryData<InfiniteData<ChatListData>>(
                 ['chats'],
                 (old) => {

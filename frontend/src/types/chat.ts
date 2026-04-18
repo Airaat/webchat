@@ -94,7 +94,7 @@ export interface UserPresence {
 }
 
 export interface UserItem {
-    id: string;
+    id: number;
     username: string;
     isActive: boolean;
     role: 'COMMON' | 'ADMIN';
