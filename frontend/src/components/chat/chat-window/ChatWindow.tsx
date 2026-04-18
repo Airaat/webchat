@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import {Box, Typography} from '@mui/material';
-import type {MessageRequest} from '../../../types/chat';
 import type {User} from '../../../types/auth'
 import {useChatWebSocket} from '../../../hooks/useChatWebSocket';
 import {ChatHeader} from './ChatHeader';
@@ -32,16 +31,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
 
     const handleSendMessage = () => {
         if (!currentMessage.trim() || !chat) return;
-
-        const message: MessageRequest = {
+        sendMessage({
             type: 'TEXT',
             content: currentMessage.trim(),
             authorId: user.id,
             authorUsername: user.username,
             timestamp: new Date()
-        }
-
-        sendMessage(message);
+        });
         setCurrentMessage('');
     };
 
@@ -54,7 +50,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
 
     const isInputDisabled = !isConnected || !chat;
     const typingIndicatorText = typingUsers.size > 0
-        ? `${Array.from(typingUsers).join(', ')} ${typingUsers.size === 1 ? 'is' : 'are'} typing...`
+        ? `${[...typingUsers].slice(0, 3).join(', ')} ${(typingUsers.size > 1 ? 'are' : 'is')} typing...`
         : '';
 
     return (
