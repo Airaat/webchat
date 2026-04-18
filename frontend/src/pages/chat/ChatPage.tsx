@@ -1,19 +1,24 @@
 import React from 'react';
 import {Container, CssBaseline} from '@mui/material';
 import {useAuth} from '../../hooks/useAuth';
-import {useChatPage} from "../../hooks/useChatPage";
+import {useChatPageActions} from "../../hooks/useChatPageActions";
 import {ChatWindow} from '../../components/chat/chat-window/ChatWindow';
 import {ChatMenu} from '../../components/chat/chat-menu/ChatMenu';
+import {useChatEventHandler} from "../../hooks/useChatEventHandler";
+import {usePresence} from "../../hooks/usePresence";
 
 export const ChatPage: React.FC = () => {
     const authContext = useAuth();
+    useChatEventHandler();
+    usePresence();
+
     const {
         chats,
         messages,
         selectedChat,
         createChat,
         selectChat,
-    } = useChatPage();
+    } = useChatPageActions();
 
     return (
         authContext.user && (
