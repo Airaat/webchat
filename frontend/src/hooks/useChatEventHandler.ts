@@ -3,12 +3,14 @@ import {type InfiniteData, useQueryClient} from "@tanstack/react-query";
 import {webSocketClient} from "../core/webSocketClient";
 import type {ChatItem, ChatListData, ChatNotification, Message, MessagePageResponse, UserPresence} from "../types/chat";
 import {selectChats} from "./useChats";
+import {useChatUIStore} from "../store/chatUIStore.ts";
 
 const CHAT_QUERY_KEY = ['chats'];
 const MESSAGE_QUERY_KEY = ['messages'];
 
 export const useChatEventHandler = () => {
     const queryClient = useQueryClient();
+    const setConnectionStatus = useChatUIStore((s) => s.setConnectionStatus);
     const subscriptionsRef = useRef<Map<string, string>>(new Map());
 
     const onMessageReceived = useCallback((msg: Message) => {
@@ -127,6 +129,7 @@ export const useChatEventHandler = () => {
         };
 
         const unsubscribe = webSocketClient.onConnectionChange((connected) => {
+            setConnectionStatus(connected ? "connected" : "disconnected");
             if (connected && isMounted) {
                 setupSubscriptions();
             }
@@ -136,6 +139,7 @@ export const useChatEventHandler = () => {
             setupSubscriptions();
         }
 
+        setConnectionStatus("connecting");
         webSocketClient.connect().catch((err) =>
             console.error('Failed to connect WebSocket:', err)
         );
@@ -148,6 +152,7 @@ export const useChatEventHandler = () => {
         }
     }, [
         subscribeToTopic,
+        setConnectionStatus,
         onMessageReceived,
         onPresenceUpdate,
         onNotificationReceived,

@@ -71,10 +71,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 gap: 2
             }}
         >
-            <ChatHeader
-                chat={chat}
-                isConnected={isConnected}
-            />
+            <ChatHeader/>
 
             <MessageList
                 messages={messages}

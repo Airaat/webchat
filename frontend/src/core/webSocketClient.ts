@@ -66,6 +66,7 @@ class WebSocketClient {
             },
             onWebSocketError: (event) => {
                 console.error('WebSocket error:', event);
+                this.notifyConnectionChange(false);
             },
             onDisconnect: () => {
                 console.log('WebSocket disconnected');
