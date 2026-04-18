@@ -6,21 +6,15 @@ import {SearchBar} from './SearchBar';
 import {ChatList} from './ChatList';
 import {SearchResults} from './SearchResults';
 import {Loader} from '../../ui/Feedback/Loader';
-import {useChats} from "../../../hooks/useChats";
+import {selectChats, useChats} from "../../../hooks/useChats";
+import {useChatUIStore} from "../../../store/chatUIStore";
+import {useChatPageActions} from "../../../hooks/useChatPageActions";
 
-interface ChatMenuProps {
-    chats: ChatItem[];
-    onChatSelect: (chat: ChatItem) => void;
-    onChatCreate: (user: UserItem) => Promise<ChatItem>;
-    selectedChatId?: number;
-}
 
-export const ChatMenu: React.FC<ChatMenuProps> = ({
-                                                      chats,
-                                                      onChatCreate,
-                                                      onChatSelect,
-                                                      selectedChatId,
-                                                  }) => {
+export const ChatMenu: React.FC = () => {
+    const selectedChat = useChatUIStore((s) => s.selectedChat);
+    const {data, isLoading} = useChats();
+    const chats = selectChats(data);
     const {
         searchResults,
         searchTerm,
@@ -28,16 +22,16 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
         resetSearch,
         setSearchTerm,
     } = useUserSearch();
-    const {isLoading} = useChats();
+    const {createChat, selectChat} = useChatPageActions();
 
     const handleUserSelect = async (user: UserItem) => {
-        const newChat = await onChatCreate(user);
-        onChatSelect(newChat);
+        const newChat = await createChat(user);
+        selectChat(newChat);
         resetSearch();
     };
 
     const handleChatSelect = (chat: ChatItem) => {
-        onChatSelect(chat);
+        selectChat(chat);
         resetSearch();
     };
 
@@ -79,7 +73,7 @@ export const ChatMenu: React.FC<ChatMenuProps> = ({
             {showChatList && (
                 <ChatList
                     chats={chats}
-                    selectedChatId={selectedChatId}
+                    selectedChatId={selectedChat?.id}
                     onChatSelect={handleChatSelect}
                     emptyMessage="No chats yet"
                 />
