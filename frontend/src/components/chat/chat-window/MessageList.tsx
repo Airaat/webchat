@@ -1,19 +1,31 @@
-import React, {memo, useEffect, useMemo, useRef} from 'react';
+import React, {memo, useMemo, useRef} from 'react';
 import {List, ListItem, ListItemText} from '@mui/material';
 import {formatMessageTimestamp} from "../../../utils/dateUtils";
 import {selectMessages, useMessages} from "../../../hooks/useMessages";
 import {useChatUIStore} from "../../../store/chatUIStore";
+import {Loader} from "../../ui/Feedback/Loader";
+import {useInfiniteScroll} from "../../../hooks/useInfiniteScroll";
 
 
 export const MessageList: React.FC = memo(() => {
     const chat = useChatUIStore((s) => s.selectedChat);
-    const {data} = useMessages(chat?.id);
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useMessages(chat?.id);
+
     const messages = useMemo(() => selectMessages(data), [data]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const topSentinelRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
-    }, [messages]);
+    useInfiniteScroll({
+        sentinelRef: topSentinelRef,
+        hasMore: hasNextPage,
+        isLoading: isFetchingNextPage,
+        onLoadMore: fetchNextPage,
+    })
 
     return (
         <List
@@ -31,6 +43,9 @@ export const MessageList: React.FC = memo(() => {
                 minHeight: 0
             }}
         >
+            {hasNextPage && <div ref={topSentinelRef} style={{height: 1}}/>}
+            {isFetchingNextPage && <Loader/>}
+
             {messages.map((message) => (
                 <ListItem
                     key={message.id}
