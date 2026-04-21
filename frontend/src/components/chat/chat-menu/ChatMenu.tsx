@@ -6,15 +6,14 @@ import {SearchBar} from './SearchBar';
 import {ChatList} from './ChatList';
 import {SearchResults} from './SearchResults';
 import {Loader} from '../../ui/Feedback/Loader';
-import {selectChats, useChats} from "../../../hooks/useChats";
+import {useChats} from "../../../hooks/useChats";
 import {useChatUIStore} from "../../../store/chatUIStore";
 import {useChatPageActions} from "../../../hooks/useChatPageActions";
 
 
 export const ChatMenu: React.FC = () => {
     const selectedChat = useChatUIStore((s) => s.selectedChat);
-    const {data, isLoading} = useChats();
-    const chats = selectChats(data);
+    const {isLoading} = useChats();
     const {
         searchResults,
         searchTerm,
@@ -72,7 +71,6 @@ export const ChatMenu: React.FC = () => {
 
             {showChatList && (
                 <ChatList
-                    chats={chats}
                     selectedChatId={selectedChat?.id}
                     onChatSelect={handleChatSelect}
                     emptyMessage="No chats yet"

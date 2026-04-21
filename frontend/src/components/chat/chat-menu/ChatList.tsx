@@ -1,22 +1,34 @@
-import React from 'react';
+import React, {useMemo, useRef} from 'react';
 import {List, ListItem, ListItemText} from '@mui/material';
 import type {ChatItem} from '../../../types/chat';
 import {ChatListItem} from './ChatListItem';
 import {listStyles} from '../../../styles/chatLists';
+import {useChats} from '../../../hooks/useChats';
+import {selectChats} from "../../../hooks/useChats";
+import {useInfiniteScroll} from "../../../hooks/useInfiniteScroll";
 
 interface ChatListProps {
-    chats: ChatItem[];
     selectedChatId?: number;
     onChatSelect: (chat: ChatItem) => void;
     emptyMessage?: string;
 }
 
 export const ChatList: React.FC<ChatListProps> = ({
-                                                      chats,
                                                       selectedChatId,
                                                       onChatSelect,
                                                       emptyMessage = "No chats yet"
                                                   }) => {
+
+    const {data, fetchNextPage, hasNextPage, isFetchingNextPage} = useChats();
+    const chats = useMemo(() => selectChats(data), [data]);
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
+    useInfiniteScroll({
+        sentinelRef: sentinelRef,
+        hasMore: hasNextPage,
+        isLoading: isFetchingNextPage,
+        onLoadMore: fetchNextPage,
+    });
 
     return (
         <List sx={listStyles}>
@@ -37,6 +49,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                     />
                 </ListItem>
             )}
+            {hasNextPage && <div ref={sentinelRef}/>}
         </List>
     );
 };
