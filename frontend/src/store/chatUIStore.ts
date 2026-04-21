@@ -13,9 +13,20 @@ interface ChatUIStore {
     selectedChat: ChatItem | null;
     setSelectedChat: (chat: ChatItem | null) => void;
 
-    // first visible message index per chat
-    firstVisiblePerChat: Record<number, number>;
-    setFirstVisiblePerChat: (chatId: number, index: number) => void;
+    /**
+     * Scroll anchor: the ID of the first-visible message for each chat.
+     * Keyed by chatId (number). Value is the message ID (number).
+     *
+     * undefined means "first visit" → scroll to bottom on open.
+     * A stored value means "return visit" → restore that position.
+     *
+     * Replaces the previous index-based firstVisiblePerChat slice.
+     * Session-only (no persistence middleware) — satisfies FR8.
+     */
+    scrollAnchors: Record<number, number>;
+    setScrollAnchor: (chatId: number, messageId: number) => void;
+    getScrollAnchor: (chatId: number) => number | undefined;
+    clearScrollAnchor: (chatId: number) => void;
 
     // unread count per chat
     unreadCounts: Record<number, number>
@@ -32,18 +43,28 @@ interface ChatUIStore {
 export const useChatUIStore = create<ChatUIStore>()(
     devtools(
         // persist(
-        (set) => ({
+        (set, get) => ({
             connection: "disconnected",
             setConnectionStatus: (status) => set({connection: status}),
 
             selectedChat: null,
             setSelectedChat: (chat) => set({selectedChat: chat}),
 
-            firstVisiblePerChat: {},
-            setFirstVisiblePerChat: (chatId, index) =>
+            scrollAnchors: {},
+            setScrollAnchor: (chatId, messageId) =>
                 set((state) => ({
-                    firstVisiblePerChat: {...state.firstVisiblePerChat, [chatId]: index},
+                    scrollAnchors: {...state.scrollAnchors, [chatId]: messageId},
                 })),
+            getScrollAnchor(chatId) {
+                return get().scrollAnchors[chatId];
+            },
+            clearScrollAnchor(chatId) {
+                set((state) => {
+                    const next = {...state.scrollAnchors};
+                    delete next[chatId];
+                    return {scrollAnchors: next};
+                });
+            },
 
             unreadCounts: {},
             setUnreadCount: (chatId, count) =>
