@@ -2,6 +2,7 @@ import React from 'react';
 import {ListItem, ListItemButton, Avatar, Typography, Box} from '@mui/material';
 import type {ChatItem} from '../../../types/chat';
 import {formatChatTime} from '../../../utils/dateUtils';
+import {generateChatColor} from '../../../utils/colorUtils';
 
 interface ChatListItemProps {
     chat: ChatItem;
@@ -41,6 +42,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({
                         mr: 2,
                         position: 'relative',
                         overflow: 'unset',
+                        backgroundColor: generateChatColor(chat.title),
                         '&::after': chat.isOnline ? {
                             content: '""',
                             position: 'absolute',
