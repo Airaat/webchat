@@ -64,7 +64,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({user}) => {
             }}
         >
             <ChatHeader/>
-            <MessageList/>
+            <MessageList currentUserId={user.id}/>
 
             {/* Typing Indicator */}
             {typingIndicatorText && (

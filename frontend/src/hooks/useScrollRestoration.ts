@@ -1,5 +1,6 @@
 import {useEffect, useRef} from 'react';
 import {useChatUIStore} from '../store/chatUIStore';
+import {scrollToBottom} from '../utils/scrollHelpers';
 
 /**
  * useScrollRestoration
@@ -41,11 +42,6 @@ interface UseScrollRestorationOptions {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function scrollToBottom(container: HTMLElement): void {
-    // Direct assignment — instant, no animation flash on mount.
-    container.scrollTop = container.scrollHeight - container.clientHeight;
-}
 
 function scrollToMessage(container: HTMLElement, messageId: number): boolean {
     const el = container.querySelector<HTMLElement>(

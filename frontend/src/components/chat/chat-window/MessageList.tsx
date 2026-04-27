@@ -5,9 +5,14 @@ import {selectMessages, useMessages} from "../../../hooks/useMessages";
 import {useChatUIStore} from "../../../store/chatUIStore";
 import {useScrollTracker} from "../../../hooks/useScrollTracker";
 import {useScrollRestoration} from "../../../hooks/useScrollRestoration";
+import {useAutoScrollOnNewMessage} from "../../../hooks/useAutoScrollOnNewMessage";
 import { Loader } from '../../ui/Feedback/Loader';
 
-export const MessageList: React.FC = memo(() => {
+interface MessageListProps {
+    currentUserId: number | undefined;
+}
+
+export const MessageList: React.FC<MessageListProps> = memo(({currentUserId}) => {
     const chat = useChatUIStore((s) => s.selectedChat);
     const {data, fetchNextPage, hasNextPage, isFetchingNextPage} = useMessages(chat?.id);
 
@@ -87,6 +92,15 @@ export const MessageList: React.FC = memo(() => {
         // To enable FR7 deep-link restoration, pass a handler that calls
         // fetchPageContaining(messageId) via your chatService.
         onAnchorNotFound: undefined,
+    });
+
+    // ── Auto-scroll to bottom on new tail message ────────────────────────────
+    // Always for own messages; for others only when near bottom.
+    useAutoScrollOnNewMessage({
+        chatId: chat?.id ?? 0,
+        messages,
+        currentUserId,
+        scrollContainerRef: scrollContainerRef as React.RefObject<HTMLElement>,
     });
 
     // ── Top sentinel for infinite scroll ─────────────────────────────────────

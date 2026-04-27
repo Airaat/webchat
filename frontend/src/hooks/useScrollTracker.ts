@@ -81,6 +81,16 @@ export function useScrollTracker({
 
         if (nodes.length === 0) return;
 
+        // The scroll container has inner padding. scrollIntoView({block:'start'})
+        // aligns a message with the scrollport (= padding box), which leaves the
+        // bottom edge of the previous message visible inside that padding strip.
+        // With threshold:0 the observer would mark that previous message as
+        // intersecting and getFirstVisibleId — walking oldest→newest — would
+        // pick it as the anchor. Each chat reopen would then drift up by one
+        // message. Shrinking the root from the top by paddingTop excludes the
+        // padding strip from the intersection area and stops the drift.
+        const paddingTop = parseFloat(window.getComputedStyle(container).paddingTop) || 0;
+
         // root: the scroll container so only messages inside the chat pane count.
         // threshold: 0 → fire as soon as any pixel is visible.
         const observer = new IntersectionObserver(
@@ -93,7 +103,7 @@ export function useScrollTracker({
                 }
                 scheduleFlush();
             },
-            {root: container, threshold: 0}
+            {root: container, rootMargin: `-${paddingTop}px 0px 0px 0px`, threshold: 0}
         );
 
         for (const {el} of nodes) {
