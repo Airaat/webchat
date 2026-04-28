@@ -1,12 +1,15 @@
 import React, {memo, useCallback, useEffect, useMemo, useRef} from 'react';
-import {List, ListItem, ListItemText} from '@mui/material';
+import {Box, Fab, List, ListItem, ListItemText} from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {formatMessageTimestamp} from "../../../utils/dateUtils";
 import {selectMessages, useMessages} from "../../../hooks/useMessages";
 import {useChatUIStore} from "../../../store/chatUIStore";
 import {useScrollTracker} from "../../../hooks/useScrollTracker";
 import {useScrollRestoration} from "../../../hooks/useScrollRestoration";
 import {useAutoScrollOnNewMessage} from "../../../hooks/useAutoScrollOnNewMessage";
-import { Loader } from '../../ui/Feedback/Loader';
+import {useFarFromBottom} from "../../../hooks/useFarFromBottom";
+import {scrollToBottom} from "../../../utils/scrollHelpers";
+import {Loader} from '../../ui/Feedback/Loader';
 
 interface MessageListProps {
     currentUserId: number | undefined;
@@ -103,6 +106,17 @@ export const MessageList: React.FC<MessageListProps> = memo(({currentUserId}) =>
         scrollContainerRef: scrollContainerRef as React.RefObject<HTMLElement>,
     });
 
+    // ── Floating "scroll to bottom" button visibility ────────────────────────
+    const isFarFromBottom = useFarFromBottom({
+        scrollContainerRef: scrollContainerRef as React.RefObject<HTMLElement>,
+        messageCount: messages.length,
+    });
+
+    const handleScrollToBottomClick = useCallback(() => {
+        const container = scrollContainerRef.current;
+        if (container) scrollToBottom(container, 'smooth');
+    }, []);
+
     // ── Top sentinel for infinite scroll ─────────────────────────────────────
     const topSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -124,52 +138,79 @@ export const MessageList: React.FC<MessageListProps> = memo(({currentUserId}) =>
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <List
-            ref={scrollContainerRef as React.RefObject<HTMLUListElement>}
+        <Box
             sx={{
+                position: 'relative',
                 flex: 1,
-                p: 2,
-                width: '100%',
-                backgroundColor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                overflow: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
                 minHeight: 0,
+                display: 'flex',
+                width: '100%',
             }}
         >
-            {/* Top sentinel — triggers older-message fetch on scroll-to-top */}
-            <div ref={topSentinelRef} style={{height: 1}} aria-hidden="true"/>
+            <List
+                ref={scrollContainerRef as React.RefObject<HTMLUListElement>}
+                sx={{
+                    flex: 1,
+                    p: 2,
+                    width: '100%',
+                    backgroundColor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0,
+                }}
+            >
+                {/* Top sentinel — triggers older-message fetch on scroll-to-top */}
+                <div ref={topSentinelRef} style={{height: 1}} aria-hidden="true"/>
 
-            {isFetchingNextPage && <Loader/>}
+                {isFetchingNextPage && <Loader/>}
 
-            {messages.map((message) => (
-                <ListItem
-                    key={message.id}
-                    data-message-id={message.id}
+                {messages.map((message) => (
+                    <ListItem
+                        key={message.id}
+                        data-message-id={message.id}
+                        sx={{
+                            py: 1,
+                            width: '100%',
+                            display: 'block',
+                        }}
+                    >
+                        <ListItemText
+                            primary={`${message.authorUsername}: ${message.content}`}
+                            secondary={formatMessageTimestamp(message.timestamp.toString())}
+                            sx={{
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word',
+                                whiteSpace: 'normal',
+                                '& .MuiListItemText-primary': {
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
+                                },
+                            }}
+                        />
+                    </ListItem>
+                ))}
+            </List>
+
+            {isFarFromBottom && (
+                <Fab
+                    size="medium"
+                    color="primary"
+                    aria-label="Scroll to latest message"
+                    onClick={handleScrollToBottomClick}
                     sx={{
-                        py: 1,
-                        width: '100%',
-                        display: 'block',
+                        position: 'absolute',
+                        bottom: 16,
+                        right: 16,
+                        zIndex: 1,
                     }}
                 >
-                    <ListItemText
-                        primary={`${message.authorUsername}: ${message.content}`}
-                        secondary={formatMessageTimestamp(message.timestamp.toString())}
-                        sx={{
-                            wordWrap: 'break-word',
-                            overflowWrap: 'break-word',
-                            whiteSpace: 'normal',
-                            '& .MuiListItemText-primary': {
-                                whiteSpace: 'normal',
-                                wordBreak: 'break-word',
-                            },
-                        }}
-                    />
-                </ListItem>
-            ))}
-        </List>
+                    <KeyboardArrowDownIcon/>
+                </Fab>
+            )}
+        </Box>
     );
 });
