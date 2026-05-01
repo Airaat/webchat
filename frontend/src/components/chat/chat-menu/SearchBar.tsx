@@ -1,6 +1,8 @@
 import React from 'react';
-import {TextField, InputAdornment, Box} from '@mui/material';
+import {TextField, InputAdornment, Box, Button, Tooltip} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import {useChatUIStore} from "../../../store/chatUIStore.ts";
 
 interface SearchBarProps {
     value: string;
@@ -13,8 +15,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                                                         onChange,
                                                         placeholder = "Search users..."
                                                     }) => {
+    const openGroupModal = useChatUIStore((s) => s.openGroupCreationModal);
+
     return (
-        <Box sx={{p: 2, pb: 1}}>
+        <Box sx={{display: "flex", p: 2, pr: 0}}>
             <TextField
                 fullWidth
                 size="small"
@@ -34,6 +38,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     }
                 }}
             />
+            <Tooltip title="Click to create group chat">
+                <Button onClick={openGroupModal}>
+                    <GroupAddIcon/>
+                </Button>
+            </Tooltip>
         </Box>
     );
 };

@@ -55,7 +55,6 @@ export const ChatMenu: React.FC = () => {
             <SearchBar
                 value={searchTerm}
                 onChange={setSearchTerm}
-                placeholder="Search users..."
             />
 
             {isLoading && <Loader/>}

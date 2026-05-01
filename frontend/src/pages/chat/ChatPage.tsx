@@ -5,6 +5,7 @@ import {ChatWindow} from '../../components/chat/chat-window/ChatWindow';
 import {ChatMenu} from '../../components/chat/chat-menu/ChatMenu';
 import {useChatEventHandler} from "../../hooks/useChatEventHandler";
 import {usePresence} from "../../hooks/usePresence";
+import {GroupCreationModal} from "../../components/chat/group-creation-modal/GroupCreationModal.tsx";
 
 export const ChatPage: React.FC = () => {
     const authContext = useAuth();
@@ -23,9 +24,8 @@ export const ChatPage: React.FC = () => {
             >
                 <CssBaseline/>
                 <ChatMenu/>
-                <ChatWindow
-                    user={authContext.user}
-                />
+                <ChatWindow user={authContext.user}/>
+                <GroupCreationModal/>
             </Container>
         )
     );

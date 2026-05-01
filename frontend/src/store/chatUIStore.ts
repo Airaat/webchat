@@ -9,6 +9,11 @@ interface ChatUIStore {
     connection: ConnectionStatus;
     setConnectionStatus: (status: ConnectionStatus) => void;
 
+    // Modal for creating chat groups
+    groupCreationModalOpen: boolean;
+    openGroupCreationModal: () => void;
+    closeGroupCreationModal: () => void;
+
     // selected chat
     selectedChat: ChatItem | null;
     setSelectedChat: (chat: ChatItem | null) => void;
@@ -49,6 +54,10 @@ export const useChatUIStore = create<ChatUIStore>()(
 
             selectedChat: null,
             setSelectedChat: (chat) => set({selectedChat: chat}),
+
+            groupCreateModalOpen: false,
+            openGroupCreationModal: () => set({groupCreationModalOpen: true}),
+            closeGroupCreationModal: () => set({groupCreationModalOpen: false}),
 
             scrollAnchors: {},
             setScrollAnchor: (chatId, messageId) =>
