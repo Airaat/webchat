@@ -35,6 +35,13 @@ public class UserController {
         return ResponseEntity.ok(users.map(UserResponse::from).toList());
     }
 
+    @GetMapping("/suggest")
+    public ResponseEntity<List<UserResponse>> suggestUsers(Principal principal) {
+        User current = userService.getByUsername(principal.getName());
+        Stream<User> users = userService.suggestToUser(current).stream();
+        return ResponseEntity.ok(users.map(UserResponse::from).toList());
+    }
+
     @PatchMapping
     public ResponseEntity<UserResponse> update(@Valid @RequestBody UserUpdate dto) {
         User currentUser = userService.current();

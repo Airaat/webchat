@@ -1,5 +1,6 @@
 package com.airaat.webchat.service;
 
+import com.airaat.webchat.domain.dto.UserPresence;
 import com.airaat.webchat.domain.dto.request.SignupRequest;
 import com.airaat.webchat.domain.dto.request.UserUpdate;
 import com.airaat.webchat.domain.enums.GlobalRole;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -28,6 +30,7 @@ import java.util.Set;
 public class UserService implements UserDetailsService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final UserPresenceService presenceService;
 
     /**
      * @deprecated Use Principal.getName() + getByUsername() instead
@@ -63,6 +66,19 @@ public class UserService implements UserDetailsService {
 
     public Set<User> findRelatedUsers(User user) {
         return repository.findRelatedUsers(user.getId());
+    }
+
+    public Set<User> suggestToUser(User user) {
+        Set<User> users = repository.findRelatedUsers(user.getId());
+        List<Long> ids = users.stream().map(User::getId).toList();
+        Map<Long, UserPresence> presenceMap = presenceService.checkStatus(ids);
+
+        for (User u : users) {
+            UserPresence presence = presenceMap.get(u.getId());
+            u.setActive(presence.isOnline());
+        }
+
+        return users;
     }
 
     @Transactional

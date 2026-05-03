@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class UserResponse {
     private Long id;
     private String username;
-    private boolean isActive;
+    private boolean isOnline;
     private GlobalRole role;
     private LocalDateTime lastLoginAt;
 

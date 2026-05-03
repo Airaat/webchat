@@ -29,6 +29,16 @@ class ChatService {
             userIds: [userId]
         });
     }
+
+    async createGroupChat(name: string, userIds: Iterable<number>, description: string): Promise<ChatItem> {
+        const normDescription = (description.trim() !== "") ? description.trim() : null;
+        return apiClient.post<ChatItem>('/chats', {
+            chatType: 'GROUP',
+            name,
+            description: normDescription,
+            userIds: Array.from(userIds),
+        });
+    }
 }
 
 export const chatService = new ChatService();

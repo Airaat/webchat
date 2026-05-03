@@ -1,32 +1,12 @@
-import React, {useState, useMemo, useRef, useEffect} from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import {Modal as MUIModal} from '@mui/material';
 import {useChatUIStore} from "../../../store/chatUIStore.ts";
+import {userService} from "../../../services/userService.ts";
+import type {UserResponse} from "../../../types/user.ts";
+import {generateChatColor} from "../../../utils/colorUtils.ts";
+import {fmtLastLogin} from "../../../utils/dateUtils.ts";
 import './styles.css'
-
-interface DirectoryUser {
-    id: string;
-    name: string;
-    color: string;
-}
-
-/* ----------------------------- Sample directory ---------------------------- */
-const DIRECTORY: DirectoryUser[] = [
-    {id: "u1", name: "Amelia Hart", color: "#1976d2"},
-    {id: "u2", name: "Benjamin Cole", color: "#7b1fa2"},
-    {id: "u3", name: "Clara Weiss", color: "#2e7d32"},
-    {id: "u4", name: "Devon Park", color: "#ef6c00"},
-    {id: "u5", name: "Elena Russo", color: "#c2185b"},
-    {id: "u6", name: "Farouk Idris", color: "#00838f"},
-    {id: "u7", name: "Grace Liang", color: "#5d4037"},
-    {id: "u8", name: "Hassan Tariq", color: "#455a64"},
-    {id: "u9", name: "Iris Nakamura", color: "#6a1b9a"},
-    {id: "u10", name: "Jonas Berg", color: "#0277bd"},
-    {id: "u11", name: "Kira Sokolova", color: "#ad1457"},
-    {id: "u12", name: "Liam O'Connor", color: "#388e3c"},
-    {id: "u13", name: "Mei Tanaka", color: "#f57c00"},
-    {id: "u14", name: "Noah Schmidt", color: "#1565c0"},
-    {id: "u15", name: "Olive Brooks", color: "#8e24aa"},
-];
+import {chatService} from "../../../services/chatService.ts";
 
 /* ------------------------------- Icons (SVG) ------------------------------- */
 interface IconProps {
@@ -68,16 +48,16 @@ const SpinnerIcon = () => (
 
 /* --------------------------------- Avatar & Chip -------------------------- */
 interface AvatarProps {
-    user: DirectoryUser;
+    user: UserResponse;
     size?: number;
 }
 
 const Avatar = ({user, size = 36}: AvatarProps) => {
-    const initial = user.name.split(" ").map(p => p[0]).slice(0, 2).join("");
+    const initial = user.username.split(" ").map(p => p[0]).slice(0, 2).join("");
     return (
-        <div className="avatar" style={{
+        <div className={`avatar ${user.online ? "avatar-online" : ""}`} style={{
             width: size, height: size, borderRadius: "50%",
-            background: user.color, color: "white",
+            background: generateChatColor(user.username), color: "white",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: size * 0.38, fontWeight: 500, letterSpacing: 0.3,
             flexShrink: 0,
@@ -88,15 +68,15 @@ const Avatar = ({user, size = 36}: AvatarProps) => {
 };
 
 interface MemberChipProps {
-    user: DirectoryUser;
-    onRemove: (id: string) => void;
+    user: UserResponse;
+    onRemove: (id: number) => void;
 }
 
 const MemberChip = ({user, onRemove}: MemberChipProps) => (
     <div className="chip" onClick={() => onRemove(user.id)}>
         <Avatar user={user} size={24}/>
-        <span className="chip-label">{user.name}</span>
-        <button className="chip-close" aria-label={`Remove ${user.name}`}>
+        <span className="chip-label">{user.username}</span>
+        <button className="chip-close" aria-label={`Remove ${user.username}`}>
             <CloseIcon size={14}/>
         </button>
     </div>
@@ -104,9 +84,9 @@ const MemberChip = ({user, onRemove}: MemberChipProps) => (
 
 /* -------------------------------- User Row -------------------------------- */
 interface UserRowProps {
-    user: DirectoryUser;
+    user: UserResponse;
     added: boolean;
-    onAdd: (user: DirectoryUser) => void;
+    onAdd: (user: UserResponse) => void;
     dense: boolean;
 }
 
@@ -119,7 +99,10 @@ const UserRow = ({user, added, onAdd, dense}: UserRowProps) => (
     >
         <Avatar user={user} size={dense ? 32 : 36}/>
         <div className="user-meta">
-            <div className="user-name">{user.name}</div>
+            <div className="user-name">{user.username}</div>
+            {!user.online && user.lastLoginAt &&
+                <div className="user-sub">{fmtLastLogin(user.lastLoginAt)}</div>
+            }
         </div>
         <div className="user-action">
             {added ? (
@@ -154,46 +137,55 @@ export const GroupCreationModal = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [query, setQuery] = useState("");
-    const [added, setAdded] = useState<DirectoryUser[]>([]);
+    const [added, setAdded] = useState<UserResponse[]>([]);
     const [loading, setLoading] = useState(false);
     const [shake, setShake] = useState(false);
     const [created, setCreated] = useState(false);
     const [errors, setErrors] = useState<{ name?: string; members?: string }>({});
-    const nameRef = useRef<HTMLInputElement | null>(null);
 
     const open = useChatUIStore((s) => s.groupCreationModalOpen);
     const closeModal = useChatUIStore((s) => s.closeGroupCreationModal);
 
+    const [suggested, setSuggested] = useState<UserResponse[]>([]);
+
     // Simulated search latency
     useEffect(() => {
+        const fetchSuggested = async () => {
+            const raw = await userService.getSuggested();
+            setSuggested(raw);
+        };
+
+        const fetchWithSearch = async (q: string) => {
+            const raw = await userService.findByUsername(q);
+            setSuggested(raw);
+        };
+
+        setLoading(true);
         if (!query) {
+            fetchSuggested()
             setLoading(false);
             return;
         }
-        setLoading(true);
-        const t = setTimeout(() => setLoading(false), 380);
-        return () => clearTimeout(t);
+
+        fetchWithSearch(query);
+        setLoading(false);
     }, [query]);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return DIRECTORY;
-        return DIRECTORY.filter(u =>
-                u.name.toLowerCase().includes(q)
-            // u.handle.toLowerCase().includes(q) ||
-            // u.email.toLowerCase().includes(q)
-        );
-    }, [query]);
+        if (!q) return suggested;
+        return suggested.filter(u => u.username.toLowerCase().includes(q));
+    }, [query, suggested]);
 
     const addedIds = new Set(added.map(u => u.id));
 
-    const addUser = (user: DirectoryUser) => {
+    const addUser = (user: UserResponse) => {
         setAdded(prev => [...prev, user]);
         setErrors(e => ({...e, members: undefined}));
     };
-    const removeUser = (id: string) => setAdded(prev => prev.filter(u => u.id !== id));
+    const removeUser = (id: number) => setAdded(prev => prev.filter(u => u.id !== id));
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         const e: { name?: string; members?: string } = {};
         if (!name.trim()) e.name = "Chat name is required";
         if (added.length === 0) e.members = "Add at least one member";
@@ -203,7 +195,9 @@ export const GroupCreationModal = () => {
             setTimeout(() => setShake(false), 380);
             return;
         }
+        await chatService.createGroupChat(name, addedIds, description);
         setCreated(true);
+        closeModal();
     };
 
     const handleCancel = () => {
@@ -265,7 +259,6 @@ export const GroupCreationModal = () => {
                         <div className="field">
                             <label className="field-label">Chat name</label>
                             <input
-                                ref={nameRef}
                                 className={`tf ${errors.name ? "tf-error" : ""}`}
                                 type="text"
                                 value={name}
@@ -347,7 +340,7 @@ export const GroupCreationModal = () => {
                             </div>
                             <div className="helper-row">
                             <span
-                                className="helper">{loading ? "Searching directory…" : `${filtered.filter(u => !(tweaks.hideAdded && addedIds.has(u.id))).length} of ${DIRECTORY.length} people`}</span>
+                                className="helper">{loading ? "Searching directory…" : `${filtered.filter(u => !(tweaks.hideAdded && addedIds.has(u.id))).length} of ${suggested.length} people`}</span>
                             </div>
                         </div>
 

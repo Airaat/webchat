@@ -14,6 +14,8 @@ import java.util.Set;
 public interface UserRepository extends CrudRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
+    boolean existsByUsername(String username);
+
     @Query(value = """
             SELECT * FROM usr
             WHERE LOWER(username) LIKE LOWER(:username) || '%'
@@ -21,8 +23,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
             """, nativeQuery = true)
     List<User> findByUsernameContainingIgnoreCase(@Param("username") String username);
 
-    boolean existsByUsername(String username);
-
+    // TODO: добавить пагинацию
     @Query(value = """
             WITH related_users AS (SELECT DISTINCT cp2.user_id AS user_id
                                    FROM chat_participant cp1
