@@ -1,10 +1,12 @@
 package com.airaat.webchat.controller;
 
 import com.airaat.webchat.domain.dto.ChatGroupDTO;
+import com.airaat.webchat.domain.dto.ChatNotification;
 import com.airaat.webchat.domain.dto.request.CreateChatRequest;
 import com.airaat.webchat.domain.dto.request.MuteChatRequest;
 import com.airaat.webchat.domain.dto.response.*;
 import com.airaat.webchat.domain.enums.ChatType;
+import com.airaat.webchat.domain.enums.NotificationType;
 import com.airaat.webchat.domain.model.Chat;
 import com.airaat.webchat.domain.model.User;
 import com.airaat.webchat.service.ChatService;
@@ -14,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 class ChatController {
     private final UserService userService;
     private final ChatService chatService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping
     public ResponseEntity<ChatListResponse> chats(@RequestParam(defaultValue = "0", required = false) Integer page) {
@@ -65,19 +69,59 @@ class ChatController {
 
         if (request.getChatType() == ChatType.PRIVATE) {
             User target = userService.getById(request.getUserIds().getFirst());
-            Chat chat = chatService.createPrivate(List.of(current, target));
-            chatItem = ChatItem.from(chat);
+            Chat newChat = chatService.createPrivate(List.of(current, target));
+            messagingTemplate.convertAndSendToUser(
+                    current.getUsername(),
+                    "/queue/notifications",
+                    ChatNotification.builder()
+                            .chatId(newChat.getId())
+                            .action(NotificationType.CREATE)
+                            .chatType(newChat.getType())
+                            .chatTitle(target.getUsername())
+                            .build()
+            );
+            messagingTemplate.convertAndSendToUser(
+                    target.getUsername(),
+                    "/queue/notifications",
+                    ChatNotification.builder()
+                            .chatId(newChat.getId())
+                            .action(NotificationType.CREATE)
+                            .chatType(newChat.getType())
+                            .chatTitle(current.getUsername())
+                            .build()
+            );
+
+            chatItem = ChatItem.from(newChat);
             chatItem.setTitle(target.getUsername());
         } else {
+            List<User> members = userService.getByIds(request.getUserIds());
             ChatGroupDTO dto = ChatGroupDTO.builder()
                     .name(request.getName())
                     .description(request.getDescription())
                     .creator(current)
-                    .members(userService.getByIds(request.getUserIds()))
+                    .members(members)
                     .build();
 
-            Chat chat = chatService.createGroup(dto);
-            chatItem = ChatItem.from(chat);
+            Chat newChat = chatService.createGroup(dto);
+            members.add(current);
+
+            // notify about creation
+            for (User user : members) {
+                ChatNotification notification = ChatNotification.builder()
+                        .chatId(newChat.getId())
+                        .action(NotificationType.CREATE)
+                        .chatType(newChat.getType())
+                        .chatTitle(request.getName())
+                        .build();
+
+                messagingTemplate.convertAndSendToUser(
+                        user.getUsername(),
+                        "/queue/notifications",
+                        notification
+                );
+            }
+
+            chatItem = ChatItem.from(newChat);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(chatItem);

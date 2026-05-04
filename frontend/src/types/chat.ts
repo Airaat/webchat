@@ -33,6 +33,8 @@ export interface TypingNotification {
 export interface ChatNotification {
     chatId: number;
     action: 'CREATE' | 'UPDATE' | 'DELETE';
+    chatType: 'PRIVATE' | 'GROUP';
+    chatTitle: string;
     lastMessage: string;
     lastMessageAt: Date;
 }
@@ -58,7 +60,7 @@ export interface ChatItem {
     type: 'PRIVATE' | 'GROUP';
     groupRole?: 'MEMBER' | 'ADMIN' | 'OWNER';
     lastMessage?: string;
-    lastMessageAt: Date;
+    lastMessageAt?: Date;
     mutedUntil?: Date;
     unreadCount?: number;
     isOnline?: boolean;

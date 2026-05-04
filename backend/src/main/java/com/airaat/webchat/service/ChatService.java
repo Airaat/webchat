@@ -57,7 +57,7 @@ public class ChatService {
     public Page<ChatItem> getAllForUser(User user, int num) {
         final int size = 50;
         Pageable page = PageRequest.of(num, size, Sort.by(
-                Sort.Order.desc("last_message_at").nullsLast(),
+                Sort.Order.desc("last_message_at").nullsFirst(),
                 Sort.Order.desc("created_at")
         ));
         Page<ChatView> views = repository.findAllForUser(user.getId(), page);

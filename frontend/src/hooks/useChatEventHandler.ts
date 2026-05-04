@@ -92,15 +92,37 @@ export const useChatEventHandler = () => {
     }, [queryClient]);
 
     const onNotificationReceived = useCallback((notification: ChatNotification) => {
-        // TODO: handle chatCreated, chatDeleted, chatUpdated, newMessage, messageDeleted
-        // qc.setQueryData<InfiniteData<ChatListData>>(
-        //     CHAT_QUERY_KEY,
-        //     (old) => {
-        //         // console.log("ignoring chat notification event: ", notification);
-        //         return old;
-        //     }
-        // );
-    }, []);
+        // TODO: handle chatDeleted, chatUpdated, messageDeleted
+        queryClient.setQueryData<InfiniteData<ChatListData>>(
+            CHAT_QUERY_KEY,
+            (old) => {
+                if (!old || notification.action !== 'CREATE') {
+                    return old;
+                }
+
+                const newChatItem: ChatItem = {
+                    id: notification.chatId,
+                    title: notification.chatTitle,
+                    type: notification.chatType
+                };
+
+                const [firstPage, ...restPages] = old.pages;
+                return {
+                    ...old,
+                    pages: [
+                        {
+                            ...firstPage,
+                            chats: [
+                                newChatItem,
+                                ...firstPage.chats
+                            ],
+                        },
+                        ...restPages
+                    ]
+                };
+            }
+        );
+    }, [queryClient]);
 
     const onError = useCallback((e: unknown) => {
         console.error('WebSocket error:', e)
