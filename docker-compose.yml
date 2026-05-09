@@ -60,10 +60,11 @@ services:
 
   editor-server:
     build: editor/
-    command: node server.js
+    command: npm run server
     environment:
       REDIS: "${REDIS_URL}"
       POSTGRES: "${EDITOR_DB_URL}"
+      JWT_SECRET: "${JWT_ACCESS_SECRET}"
     ports: [ "3000:3000" ]
     depends_on:
       redis:
@@ -75,7 +76,7 @@ services:
 
   editor-worker:
     build: editor/
-    command: node worker.js
+    command: npm run worker
     environment:
       REDIS: "${REDIS_URL}"
       POSTGRES: "${EDITOR_DB_URL}"

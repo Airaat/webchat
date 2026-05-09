@@ -5,12 +5,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node src/server.js",
+    "worker": "node src/worker.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@y/hub": "^0.2.18",
+    "jsonwebtoken": "^9.0.3",
     "wscat": "^6.1.0"
   }
 }
