@@ -6,6 +6,7 @@ import {SignUpPage} from "./pages/auth/SignUpPage";
 import {ChatPage} from './pages/chat/ChatPage';
 import {theme} from './styles/theme';
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {EditorPage} from "./pages/editor/EditorPage.tsx";
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                             <Route path="/login" element={<LoginPage/>}/>
                             <Route path="/signup" element={<SignUpPage/>}/>
                             <Route path="/chat" element={<ChatPage/>}/>
+                            <Route path="/editor" element={<EditorPage/>}/>
                         </Routes>
                     </Router>
                 </AuthProvider>
