@@ -1,7 +1,7 @@
 import {Client, type IMessage, type StompSubscription} from '@stomp/stompjs';
 import {authService} from '../services/authService';
 import {jwtService} from "../services/jwtService";
-import {WS_BASE_URL} from "../const";
+import {CHAT_WS_BASE_URL} from "../const";
 
 interface WebSocketConfig {
     brokerURL?: string;
@@ -19,7 +19,7 @@ class WebSocketClient {
 
     constructor(config: WebSocketConfig = {}) {
         this.config = {
-            brokerURL: WS_BASE_URL,
+            brokerURL: CHAT_WS_BASE_URL,
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,

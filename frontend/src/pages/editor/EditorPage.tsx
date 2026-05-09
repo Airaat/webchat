@@ -5,30 +5,29 @@ import {QuillBinding} from 'y-quill';
 import {WebsocketProvider} from 'y-websocket';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
-import {authService} from "../../services/authService.ts";
-import {generateChatColor} from "../../utils/colorUtils.ts";
+import {authService} from '../../services/authService.ts';
+import {generateChatColor} from '../../utils/colorUtils.ts';
+import {YHUB_WS_BASE_URL} from "../../const.ts";
 
 Quill.register('modules/cursors', QuillCursors);
 
 export const EditorPage = () => {
-    const editorRef = useRef<HTMLDivElement>(null);
-    const quillInstance = useRef<Quill | null>(null);
-    const bindingRef = useRef<QuillBinding | null>(null);
-    const providerRef = useRef<WebsocketProvider | null>(null);
-    const ydocRef = useRef<Y.Doc | null>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     // TODO: replace by real UUID
     const docId = 'docexample';
 
     useEffect(() => {
+        const wrapper = wrapperRef.current;
         const authToken = authService.getToken();
-        if (!editorRef.current || !authToken) return;
-
         const currentUser = authService.getCurrentUser();
-        if (!currentUser) return;
+        if (!wrapper || !authToken || !currentUser) return;
 
-        // Initialize Quill only after DOM is ready
-        const quill = new Quill(editorRef.current, {
+        const editorContainer = document.createElement('div');
+        editorContainer.style.height = '500px';
+        wrapper.appendChild(editorContainer);
+
+        const quill = new Quill(editorContainer, {
             modules: {
                 cursors: true,
                 toolbar: [
@@ -36,46 +35,34 @@ export const EditorPage = () => {
                     ['bold', 'italic', 'underline'],
                     ['image', 'code-block'],
                 ],
-                history: {
-                    userOnly: true,
-                },
+                history: {userOnly: true},
             },
             placeholder: 'Start collaborating...',
             theme: 'snow',
         });
-        quillInstance.current = quill;
 
         const ydoc = new Y.Doc();
-        ydocRef.current = ydoc;
-
         const provider = new WebsocketProvider(
-            `ws://localhost:3000/ws/`,
+            YHUB_WS_BASE_URL,
             `webchat/${docId}`,
             ydoc,
             {params: {yauth: authToken}}
         );
-        providerRef.current = provider;
 
-        const awareness = provider.awareness;
-        awareness.setLocalStateField('user', {
+        provider.awareness.setLocalStateField('user', {
             name: currentUser.username,
-            color: generateChatColor('username')
+            color: generateChatColor(currentUser.username),
         });
 
-        const ytext = ydoc.getText('quill');
-        const binding = new QuillBinding(ytext, quill, awareness);
-        bindingRef.current = binding;
+        const binding = new QuillBinding(ydoc.getText('quill'), quill, provider.awareness);
 
         return () => {
-            provider.destroy();
             binding.destroy();
+            provider.destroy();
             ydoc.destroy();
+            wrapper.replaceChildren();
         };
     }, [docId]);
 
-    return (
-        <>
-            <div id="editor" ref={editorRef} style={{height: '500px'}}/>
-        </>
-    );
+    return <div ref={wrapperRef}/>;
 };
